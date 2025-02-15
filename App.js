@@ -10,10 +10,12 @@ import Home, { HomeScreen } from "./screens/HomeScreen";
 import Garden, { GardenScreen } from "./screens/GardenScreen";
 import PlantScreen from './screens/PlantScreen'; 
 import SeedsScreen from './screens/SeedsScreen';
+import FieldsScreen from './screens/FieldsScreen';
 
 export const SCREEN_HOME = "Home";
 export const SCREEN_GARDEN = "Garden";
-export const SCREEN_SEEDS = "Seeds"
+export const SCREEN_SEEDS = "Seeds";
+export const SCREEN_FIELDS = "Fields";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();  
@@ -36,23 +38,6 @@ function GardenStack() {
   );
 }
 
-function GardenStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name={SCREEN_HOME} 
-        component={HomeScreen} 
-        options={{ headerShown: false }}  
-      />
-      <Stack.Screen 
-        name={SCREEN_GARDEN}
-        component={GardenScreen}  
-        options={{ headerShown: false }}  
-      />
-    </Stack.Navigator>
-  );
-}
-
 
 export default function App() {
   const scheme = useColorScheme();
@@ -68,6 +53,7 @@ export default function App() {
               case SCREEN_HOME: iconName = "home-sharp"; break;
               case SCREEN_GARDEN: iconName = "leaf-sharp"; break;
               case SCREEN_SEEDS: iconName = "water-sharp"; break
+              case SCREEN_FIELDS: iconName = "flower-sharp"; break
               default: iconName = "information-circle";
             }
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -78,6 +64,7 @@ export default function App() {
       >
         <Tab.Screen name={SCREEN_HOME} component={Home} options={{ title: 'Vítejte', headerStyle: { backgroundColor: '#ccd5ae' } }} />
         <Tab.Screen name={SCREEN_GARDEN} component={GardenStack} options={{ title: 'Skleníky', headerStyle: { backgroundColor: '#ccd5ae' } }} />
+        <Tab.Screen name={SCREEN_FIELDS} component={FieldsScreen} options={{ title: 'Záhony', headerStyle: { backgroundColor: '#ccd5ae' } }} />
         <Tab.Screen name={SCREEN_SEEDS} component={SeedsScreen} options={{ title: 'Osivo', headerStyle: { backgroundColor: '#ccd5ae' } }} />
       </Tab.Navigator>
     </NavigationContainer>

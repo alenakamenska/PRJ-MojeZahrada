@@ -102,15 +102,6 @@ export const createPlantTables = async () => {
     return result;
   };
   
-  export const addPlantToField = async (plantId, fieldId) => {
-    const db = await openDatabase();
-    await db.runAsync(
-      'INSERT INTO plant_fields (plant_id, field_id) VALUES (?, ?)',
-      plantId,
-      fieldId
-    );
-    console.log(`Rostlina ${plantId} byla přidána na pole ${fieldId}`);
-  };
 
   export const getPlantbyId = async (greenhouseId) => { 
     const db = await openDatabase();  
@@ -226,3 +217,101 @@ export const createPlantTables = async () => {
     await db.runAsync('DELETE FROM seeds WHERE id = ?', id);
     console.log(`Semínko s ID ${id} bylo smazáno.`);
   };
+/**********fields*******************/
+export const createFieldsTable = async () => {
+  const db = await openDatabase();
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      location TEXT,
+      soil_type TEXT,
+      photo TEXT
+    );
+  `);
+  console.log("Tabulka 'fields' byla vytvořena nebo již existuje.");
+};
+
+// Přidání nového záhonu
+export const insertField = async (name, location, soilType, photo) => {
+  const db = await openDatabase();
+  const result = await db.runAsync(
+    'INSERT INTO fields (name, location, soil_type, photo) VALUES (?, ?, ?, ?)',
+    name,
+    location,
+    soilType,
+    photo
+  );
+  console.log(`Nový záhon přidán s ID: ${result.lastInsertRowId}`);
+  return result;
+};
+
+// Získání všech záhonů
+export const getAllFields = async () => {
+  const db = await openDatabase();
+  const rows = await db.getAllAsync('SELECT * FROM fields');
+  return rows;
+};
+
+// Úprava plant_fields (omezení na 1 rostlinu za rok na záhon)
+export const createPlantFieldsTable = async () => {
+  const db = await openDatabase();
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS plant_fields (
+      plant_id INTEGER,
+      field_id INTEGER,
+      year INTEGER,
+      PRIMARY KEY (field_id, year),
+      FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE,
+      FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE
+    );
+  `);
+  console.log("Tabulka 'plant_fields' byla vytvořena nebo již existuje.");
+};
+
+export const addPlantToField = async (plantId, fieldId, year) => {
+  const db = await openDatabase();
+
+  const existing = await db.getAllAsync(
+    'SELECT * FROM plant_fields WHERE field_id = ? AND year = ?',
+    fieldId,
+    year
+  );
+
+  if (existing.length > 0) {
+    console.log("Na tomto záhonu už je rostlina v tomto roce!");
+    return null;
+  }
+
+  await db.runAsync(
+    'INSERT INTO plant_fields (plant_id, field_id, year) VALUES (?, ?, ?)',
+    plantId,
+    fieldId,
+    year
+  );
+  console.log(`Rostlina ${plantId} byla přidána na pole ${fieldId} pro rok ${year}`);
+};
+export const removePlantFromField = async (fieldId, year) => {
+  const db = await openDatabase();
+  await db.runAsync(
+    'DELETE FROM plant_fields WHERE field_id = ? AND year = ?',
+    fieldId,
+    year
+  );
+  console.log(`Rostlina na poli ${fieldId} pro rok ${year} byla odstraněna.`);
+};
+export const deleteField = async (fieldId) => {
+  const db = await openDatabase();
+  const plants = await db.getAllAsync(
+    'SELECT * FROM plant_fields WHERE field_id = ?',
+    fieldId
+  );
+
+  if (plants.length > 0) {
+    console.log("Tento záhon obsahuje rostliny, nelze jej smazat!");
+    return { success: false, message: "Záhon obsahuje rostliny a nelze jej odstranit." };
+  }
+  await db.runAsync('DELETE FROM fields WHERE id = ?', fieldId);
+  console.log(`Záhon ${fieldId} byl odstraněn.`);
+  return { success: true, message: "Záhon byl úspěšně odstraněn." };
+};
