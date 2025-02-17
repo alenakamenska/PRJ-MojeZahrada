@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import {
   insertField,
-  createFieldsTable,
   getAllFields,
   deleteField
 } from '../database';
@@ -21,6 +20,7 @@ import IconButt from '../components/IconButt';
 import AddButt from '../components/AddButt';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,23 +44,25 @@ export const FieldsScreen = () => {
 
   const handleAddPress = async () => {
     setIsFormVisible(true);
-    await createFieldsTable();
   };
 
   const handleSave = async () => {
+    console.log("Před uložením:", fieldName, location, soilType, photo); 
     if (fieldName.trim() && location.trim() && soilType.trim()) {
-      await insertField(fieldName, location, soilType, photo);
+      await insertField(fieldName, location, soilType, photo);  
+      console.log("Záhon uložen.");
       setFieldName('');
       setLocation('');
       setSoilType('');
       setPhoto('');
       setIsFormVisible(false);
-      loadFields();
+      loadFields();  
       Alert.alert('Úspěch', 'Záhon byl přidán!');
     } else {
       Alert.alert('Chyba', 'Všechna pole musí být vyplněná!');
     }
   };
+  
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -82,9 +84,8 @@ export const FieldsScreen = () => {
 
   const handleDelete = async (id) => {
     const result = await deleteField(id);
-    if (result.success) {
-      loadFields();
-    } else {
+    loadFields();
+    if (!result.success) {
       Alert.alert("Chyba", result.message);
     }
   };
@@ -102,11 +103,11 @@ export const FieldsScreen = () => {
                   <Image source={{ uri: field.photo }} style={styles.fieldImage} />
                 ) : null}
                 <Text style={styles.FTextH}>{field.name}</Text>
-                <Text style={styles.FText}>Lokalita: {field.location}</Text>
+                <Text style={styles.FText}><Ionicons name="location-sharp"></Ionicons> {field.location}</Text>
                 <Text style={styles.FText}>Typ půdy: {field.soil_type}</Text>
                 <View style={styles.icons}>
                   <IconButt icon={'information-circle-sharp'} size={30} color={'#d4a373'}
-                    onPress={() => navigation.navigate('PlantScreen', { fieldId: field.id })}
+                    onPress={() => navigation.navigate('FieldDetail', { fieldId: field.id })}
                   />
                   <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDelete(field.id)} style={styles.delete}/>
                 </View>
@@ -178,10 +179,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   fieldItem: {
-    width: '85%',
+    width: width/2 - 20,
     backgroundColor: '#dde5b6',
     margin: 10,
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
     elevation: 5,
   },
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   },
   fieldImage: {
     width: '100%',
-    height: 100,
+    height: height/4,
     borderRadius: 10,
     marginBottom: 10,
     resizeMode: 'contain',

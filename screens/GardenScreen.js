@@ -1,34 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  ImageBackground,
-  Dimensions,
-  Text,
-  TextInput,
-  Alert,
-  Modal,
-  ScrollView,
-  Image
-} from 'react-native';
-import {
-  insertSklenik,
-  createSklenikTable,
-  getAllGreenhouses,
-  updateGreenhouse,
-  deleteGreenhouse,
-} from '../database';
+import { View, StyleSheet, Text, TextInput, Alert, Modal, ScrollView, Dimensions, Image, TouchableOpacity } from 'react-native';
+import { insertGreenhouse, getAllGreenhouses, updateGreenhouse, deleteGreenhouse } from '../database';
 import IconButt from '../components/IconButt';
 import AddButt from '../components/AddButt';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
-export const GardenScreen = props => {
+export const GardenScreen = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [sklenikName, setSklenikName] = useState('');
   const [location, setLocation] = useState('');
   const [greenhouses, setGreenhouses] = useState([]);
+  const [photo, setPhoto] = useState(''); 
   const navigation = useNavigation();
 
   const handleAddPress = async () => {
@@ -38,9 +24,11 @@ export const GardenScreen = props => {
 
   const handleSave = async () => {
     if (sklenikName.trim() && location.trim()) {
-      await insertSklenik(sklenikName, location);
+      await insertGreenhouse(sklenikName, location, photo);
+      console.log("ulozeno")
       setSklenikName('');
       setLocation('');
+      setPhoto(''); 
       setIsFormVisible(false);
       loadGreenhouses();
       Alert.alert('Úspěch', 'Skleník byl přidán!');
@@ -48,13 +36,16 @@ export const GardenScreen = props => {
       Alert.alert('Chyba', 'Všechna pole musí být vyplněná!');
     }
   };
+
   const loadGreenhouses = async () => {
     const data = await getAllGreenhouses();
     setGreenhouses(data);
   };
 
   const handleUpdate = async (id, name, location) => {
-    await updateGreenhouse(id, name, location);
+    const photoUri = photo ? photo : null;  
+
+    await updateGreenhouse(id, name, location, photoUri);
     loadGreenhouses();
   };
 
@@ -63,71 +54,96 @@ export const GardenScreen = props => {
     loadGreenhouses();
   };
 
+ const pickImage = async () => {
+     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+     if (!permissionResult.granted) {
+       Alert.alert("Přístup odmítnut", "Aplikace potřebuje přístup k fotkám.");
+       return;
+     }
+ 
+     let result = await ImagePicker.launchImageLibraryAsync({
+       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+       allowsEditing: true,
+       quality: 1,
+     });
+ 
+     if (!result.canceled) {
+       setPhoto(result.assets[0].uri);
+     }
+   };
+
   useEffect(() => {
     loadGreenhouses();
   }, []);
 
   return (
     <View style={styles.container}>
-      {/* <ImageBackground
-        source={require('../assets/garden.jpg')}
-        style={styles.image}
-        imageStyle={styles.imageStyle}>
-        <View style={styles.overlay} /> */}
-
-        <AddButt title="Přidat skleník" onPress={handleAddPress} />
-        <Text style={styles.h1}>Seznam skleniků</Text>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-          <View style={styles.greenhouseList}>
-            {greenhouses.map((sklenik) => (
-              <View key={sklenik.id} style={styles.greenhouseItem}>
-                <Text style={styles.GTextH}> {sklenik.name}</Text>
-                <Text style={styles.GText}>Lokalita - {sklenik.location}</Text>
-                <View style={styles.icons}>
-                  <IconButt icon={'information-circle-sharp'} size={30} color={'#d4a373'}
-                    onPress={() => navigation.navigate('PlantScreen', { greenhouseId: sklenik.id })}
-                  />
-                  <IconButt icon={'pencil-sharp'} size={30}
-                    onPress={() => handleUpdate(sklenik.id, sklenik.name, sklenik.location)}
-                  />
-                  <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'}
-                    onPress={() => handleDelete(sklenik.id)}
-                  />
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-
-        <Modal
-          visible={isFormVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setIsFormVisible(false)}>
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContent}>
-              <Text>Název</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Název skleníku"
-                value={sklenikName}
-                onChangeText={setSklenikName}
-              />
-              <Text>Lokalita</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Lokalita"
-                value={location}
-                onChangeText={setLocation}
-              />
-              <View style={styles.butt}>
-                <AddButt title="Uložit" onPress={handleSave} />
-                <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
+      <AddButt title="Přidat skleník" onPress={handleAddPress} />
+      <Text style={styles.h1}>Seznam skleniků</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.greenhouseList}>
+          {greenhouses.map((sklenik) => (
+            <View key={sklenik.id} style={styles.greenhouseItem}>
+              {sklenik.photo ? (
+                <Image source={{ uri: sklenik.photo }} style={styles.fieldImage} />
+                ) : null}
+              <Text style={styles.GTextH}>{sklenik.name}</Text>
+              <Text style={styles.GText}><Ionicons name="location-sharp"></Ionicons> {sklenik.location}</Text>
+              <View style={styles.icons}>
+                <IconButt
+                  icon={'information-circle-sharp'}
+                  size={30}
+                  color={'#d4a373'}
+                  onPress={() => navigation.navigate('GreenHouseDetail', { greenhouseId: sklenik.id })}
+                />
+                <IconButt
+                  icon={'pencil-sharp'}
+                  size={30}
+                  onPress={() => handleUpdate(sklenik.id, sklenik.name, sklenik.location)}
+                />
+                <IconButt
+                  icon={'trash-sharp'}
+                  size={30}
+                  color={'#ff758f'}
+                  onPress={() => handleDelete(sklenik.id)}
+                />
               </View>
             </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      <Modal visible={isFormVisible} animationType="slide" transparent={true} onRequestClose={() => setIsFormVisible(false)}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text>Název</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Název skleníku"
+              value={sklenikName}
+              onChangeText={setSklenikName}
+            />
+            <Text>Lokalita</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Lokalita"
+              value={location}
+              onChangeText={setLocation}
+            />
+
+            <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
+              <Text style={styles.imageButtonText}>{photo ? 'Změnit fotografii' : 'Vybrat fotografii'}</Text>
+            </TouchableOpacity>
+
+            {photo && <Image source={{ uri: photo }} style={styles.imagePreview} />}
+
+            <View style={styles.butt}>
+              <AddButt title="Uložit" onPress={handleSave} />
+              <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
+            </View>
           </View>
-        </Modal>
-      {/* </ImageBackground> */}
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -135,39 +151,18 @@ export const GardenScreen = props => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    /*backgroundColor: 'rgb(225, 231, 207)',*/
-    alignItems:'center',
+    alignItems: 'center',
   },
-  image: {
-    width: width,
-    height: height,
-  },
-  imageStyle: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  input: {
-    width: '100%',
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
-    borderRadius: 5,
+  scrollContainer: {
+    paddingBottom: 100,
   },
   greenhouseItem: {
-    width: '85%',
+    width: width/2 - 20,
     backgroundColor: '#dde5b6',
     margin: 10,
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
-    alignItems: 'left',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     elevation: 5,
   },
@@ -187,35 +182,62 @@ const styles = StyleSheet.create({
     backgroundColor: '#fefae0',
     padding: 35,
     borderRadius: 10,
-    width: width*0.8,
-    height: height/3,
+    width: width * 0.8,
+    height: height / 3,
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 5,
   },
   butt: {
     flexDirection: 'row',
     gap: 5,
+  },
+  imageButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#d4a373',
+    borderRadius: 5,
+  },
+  imageButtonText: {
+    color: 'white',
+    textAlign: 'center',
+  },
+  imagePreview: {
+    marginTop: 10,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    resizeMode: 'cover',
   },
   icons: {
     flexDirection: 'row',
   },
   GText: {
     fontSize: 20,
-    color:'grey',
+    color: 'grey',
   },
   GTextH: {
     fontSize: 23,
-    fontWeight:'600'
+    fontWeight: '600',
   },
-  h1:{
+  h1: {
     fontSize: 28,
-    fontWeight:'bold'
+    fontWeight: 'bold',
+    marginVertical: 20,
   },
-  plantImage:{
+  fieldImage: {
     width: '100%',
-    height: 100,
+    height: height/4,
     borderRadius: 10,
     marginBottom: 10,
     resizeMode: 'contain',
-  }
+  },
 });
 
 export default GardenScreen;

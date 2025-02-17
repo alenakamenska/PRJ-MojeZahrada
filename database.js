@@ -1,225 +1,37 @@
 import * as SQLite from 'expo-sqlite';
 
+// Otevření databáze
 export const openDatabase = async () => {
-  const db = await SQLite.openDatabaseAsync('mydatabase1.db');
+  const db = await SQLite.openDatabaseAsync('gardening1.db');
+  await db.execAsync('PRAGMA foreign_keys = ON;');
   return db;
 };
 
-export const createSklenikTable = async () => {
-  const db = await openDatabase(); // Otevření databáze
+/****************** VYTVOŘENÍ TABULEK ******************/
+
+export const createTables = async () => {
+  const db = await openDatabase();
+
   await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS sklenik (
+    CREATE TABLE IF NOT EXISTS plants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      location TEXT
+      seed_id INTEGER,
+      FOREIGN KEY (seed_id) REFERENCES seeds(id) ON DELETE SET NULL
     );
   `);
-  console.log("Tabulka 'sklenik' byla vytvořena.");
-};
-
-export const insertSklenik = async (name, location) => {
-  const db = await openDatabase(); // Otevření databáze
-  const result = await db.runAsync(
-    'INSERT INTO sklenik (name, location) VALUES (?, ?)',
-    name,
-    location
-  );
-  console.log(`Nový skleník přidán s ID: ${result.lastInsertRowId}`);
-  return result;
-};
-
-export const getAllGreenhouses = async () => {
-  const db = await openDatabase(); // Otevření databáze
-  const rows = await db.getAllAsync('SELECT * FROM sklenik');
-  return rows;
-};
-
-export const getGreenhouseById = async (id) => {
-  const db = await openDatabase(); // Otevření databáze
-  const row = await db.getFirstAsync('SELECT * FROM sklenik WHERE id = ?', id);
-  return row;
-};
-
-export const updateGreenhouse = async (id, name, location) => {
-  const db = await openDatabase(); // Otevření databáze
-  const result = await db.runAsync(
-    'UPDATE sklenik SET name = ?, location = ? WHERE id = ?',
-    name,
-    location,
-    id
-  );
-  console.log(`Skleník s ID ${id} byl aktualizován.`);
-  return result;
-};
-
-
-export const deleteGreenhouse = async (id) => {
-  const db = await openDatabase(); // Otevření databáze
-  const result = await db.runAsync('DELETE FROM sklenik WHERE id = ?', id);
-  console.log(`Skleník s ID ${id} byl smazán.`);
-  return result;
-};
-export const createPlantTables = async () => {
-    const db = await openDatabase(); 
-  
-    // Vytvoření tabulky plants, pokud neexistuje
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS plants (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        year INTEGER,
-        greenhouse_id INTEGER,
-        FOREIGN KEY (greenhouse_id) REFERENCES sklenik(id) ON DELETE SET NULL
-      );
-    `);
-  
-    console.log("Tabulka 'plants' byla vytvořena nebo již existuje.");
-  
-    // Vytvoření tabulky plant_fields, pokud neexistuje
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS plant_fields (
-        plant_id INTEGER,
-        field_id INTEGER,
-        PRIMARY KEY (plant_id, field_id),
-        FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE,
-        FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE
-      );
-    `);
-  
-    console.log("Tabulka 'plant_fields' byla vytvořena nebo již existuje.");
-  };
-  
-  
-  export const insertPlant = async (name, year, greenhouseId = null) => {
-    const db = await openDatabase();
-    const result = await db.runAsync(
-      'INSERT INTO plants (name, year, greenhouse_id) VALUES (?, ?, ?)',
-      name,
-      year || null, 
-      greenhouseId
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS seeds (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_date TEXT NOT NULL,
+      purchase_place TEXT,
+      price REAL,
+      photo TEXT,
+      quantity INTEGER,
+      is_out_of_stock BOOLEAN DEFAULT 0
     );
-    console.log(`Nová rostlina přidána s ID: ${result.lastInsertRowId}`);
-    return result;
-  };
-  
+  `);
 
-  export const getPlantbyId = async (greenhouseId) => { 
-    const db = await openDatabase();  
-    try {
-      const rows = await db.getAllAsync(`
-        SELECT p.id, p.name, p.year, g.name AS greenhouse
-        FROM plants p
-        LEFT JOIN sklenik g ON p.greenhouse_id = g.id
-        WHERE p.greenhouse_id = ?;
-      `, [greenhouseId]);  
-  
-      return rows;  
-    } catch (error) {
-      console.error("Chyba při načítání rostlin: ", error);
-      throw error;  
-    }
-  };
-  
-  export const getAllPlants = async () => {
-    const db = await openDatabase();
-    const rows = await db.getAllAsync(`
-      SELECT p.id, p.name, p.year, g.name AS greenhouse, 
-      GROUP_CONCAT(f.name, ', ') AS fields
-      FROM plants p
-      LEFT JOIN sklenik g ON p.greenhouse_id = g.id
-      LEFT JOIN plant_fields pf ON p.id = pf.plant_id
-      LEFT JOIN fields f ON pf.field_id = f.id
-      GROUP BY p.id;
-    `);
-    return rows;
-  };
-  
-  export const updatePlant = async (id, name, year, greenhouseId) => {
-    const db = await openDatabase();
-    await db.runAsync(
-      'UPDATE plants SET name = ?, year = ?, greenhouse_id = ? WHERE id = ?',
-      name,
-      year,
-      greenhouseId,
-      id
-    );
-    console.log(`Rostlina s ID ${id} byla aktualizována.`);
-  };  
-  
-  export const deletePlant = async (id) => {
-    const db = await openDatabase();
-    await db.runAsync('DELETE FROM plants WHERE id = ?', id);
-    console.log(`Rostlina s ID ${id} byla smazána.`);
-  };
-
-  export const createSeedsTable = async () => {
-    const db = await openDatabase();
-  
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS seeds (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        purchase_date TEXT NOT NULL,
-        purchase_place TEXT,
-        price REAL,
-        photo TEXT,
-        quantity INTEGER,
-        is_out_of_stock BOOLEAN DEFAULT 0
-      );
-    `);
-  
-    console.log("Tabulka 'seeds' byla vytvořena nebo již existuje.");
-  };
-  
-  export const insertSeed = async (purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
-    const db = await openDatabase();
-    const result = await db.runAsync(
-      'INSERT INTO seeds (purchase_date, purchase_place, price, photo, quantity, is_out_of_stock) VALUES (?, ?, ?, ?, ?, ?)',
-      purchaseDate,
-      purchasePlace,
-      price,
-      photo,
-      quantity,
-      isOutOfStock ? 1 : 0
-    );
-    console.log(`Nové semínko přidáno s ID: ${result.lastInsertRowId}`);
-    return result;
-  };
-  
-  export const getAllSeeds = async () => {
-    const db = await openDatabase();
-    const rows = await db.getAllAsync('SELECT * FROM seeds');
-    return rows;
-  };
-  
-  export const getSeedById = async (id) => {
-    const db = await openDatabase();
-    const row = await db.getFirstAsync('SELECT * FROM seeds WHERE id = ?', id);
-    return row;
-  };
-  
-  export const updateSeed = async (id, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
-    const db = await openDatabase();
-    await db.runAsync(
-      'UPDATE seeds SET purchase_date = ?, purchase_place = ?, price = ?, photo = ?, quantity = ?, is_out_of_stock = ? WHERE id = ?',
-      purchaseDate,
-      purchasePlace,
-      price,
-      photo,
-      quantity,
-      isOutOfStock ? 1 : 0,
-      id
-    );
-    console.log(`Semínko s ID ${id} bylo aktualizováno.`);
-  };
-  
-  export const deleteSeed = async (id) => {
-    const db = await openDatabase();
-    await db.runAsync('DELETE FROM seeds WHERE id = ?', id);
-    console.log(`Semínko s ID ${id} bylo smazáno.`);
-  };
-/**********fields*******************/
-export const createFieldsTable = async () => {
-  const db = await openDatabase();
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS fields (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -229,89 +41,215 @@ export const createFieldsTable = async () => {
       photo TEXT
     );
   `);
-  console.log("Tabulka 'fields' byla vytvořena nebo již existuje.");
-};
 
-// Přidání nového záhonu
-export const insertField = async (name, location, soilType, photo) => {
-  const db = await openDatabase();
-  const result = await db.runAsync(
-    'INSERT INTO fields (name, location, soil_type, photo) VALUES (?, ?, ?, ?)',
-    name,
-    location,
-    soilType,
-    photo
-  );
-  console.log(`Nový záhon přidán s ID: ${result.lastInsertRowId}`);
-  return result;
-};
-
-// Získání všech záhonů
-export const getAllFields = async () => {
-  const db = await openDatabase();
-  const rows = await db.getAllAsync('SELECT * FROM fields');
-  return rows;
-};
-
-// Úprava plant_fields (omezení na 1 rostlinu za rok na záhon)
-export const createPlantFieldsTable = async () => {
-  const db = await openDatabase();
   await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS plant_fields (
-      plant_id INTEGER,
+    CREATE TABLE IF NOT EXISTS greenhouses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      location TEXT,
+      photo TEXT
+    );
+  `);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS field_plants (
       field_id INTEGER,
+      plant_id INTEGER,
       year INTEGER,
+      count INTEGER,
       PRIMARY KEY (field_id, year),
       FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE,
       FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE
     );
   `);
-  console.log("Tabulka 'plant_fields' byla vytvořena nebo již existuje.");
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS greenhouse_plants (
+      greenhouse_id INTEGER,
+      plant_id INTEGER,
+      year INTEGER,
+      count INTEGER,
+      FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE,
+      FOREIGN KEY (greenhouse_id) REFERENCES greenhouses(id) ON DELETE CASCADE
+    );
+  `);
+  
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS plant_calendar (
+      plant_id INTEGER,
+      date TEXT,
+      photo TEXT,
+      harvest_amount REAL,
+      notes TEXT,
+      FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
+    );
+  `);
 };
 
-export const addPlantToField = async (plantId, fieldId, year) => {
+/****************** CRUD OPERACE ******************/
+
+export const insertPlant = async (name, seedId = null) => {
+  const db = await openDatabase();
+  return await db.runAsync('INSERT INTO plants (name, seed_id) VALUES (?, ?)', name, seedId);
+};
+
+export const getAllPlants = async () => {
+  const db = await openDatabase();
+  return await db.getAllAsync('SELECT * FROM plants');
+};
+
+export const getPlantById = async (id) => {
+  const db = await openDatabase();
+  return await db.getFirstAsync('SELECT * FROM plants WHERE id = ?', id);
+};
+
+export const updatePlant = async (id, name, seedId) => {
+  const db = await openDatabase();
+  return await db.runAsync('UPDATE plants SET name = ?, seed_id = ? WHERE id = ?', name, seedId, id);
+};
+
+export const deletePlant = async (id) => {
+  const db = await openDatabase();
+  return await db.runAsync('DELETE FROM plants WHERE id = ?', id);
+};
+
+export const insertSeed = async (purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'INSERT INTO seeds (purchase_date, purchase_place, price, photo, quantity, is_out_of_stock) VALUES (?, ?, ?, ?, ?, ?)',
+    purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0
+  );
+};
+
+export const getAllSeeds = async () => {
+  const db = await openDatabase();
+  return await db.getAllAsync('SELECT * FROM seeds');
+};
+
+export const updateSeed = async (id, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'UPDATE seeds SET purchase_date = ?, purchase_place = ?, price = ?, photo = ?, quantity = ?, is_out_of_stock = ? WHERE id = ?',
+    purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0, id
+  );
+};
+
+export const deleteSeed = async (id) => {
+  const db = await openDatabase();
+  return await db.runAsync('DELETE FROM seeds WHERE id = ?', id);
+};
+
+export const insertField = async (name, location, soilType, photo) => {
+  const db = await openDatabase();
+  return await db.runAsync('INSERT INTO fields (name, location, soil_type, photo) VALUES (?, ?, ?, ?)', name, location, soilType, photo);
+};
+
+export const getAllFields = async () => {
+  const db = await openDatabase();
+  return await db.getAllAsync('SELECT * FROM fields');
+};
+
+export const updateField = async (id, name, location, soilType, photo) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'UPDATE fields SET name = ?, location = ?, soil_type = ?, photo = ? WHERE id = ?',
+    name, location, soilType, photo, id
+  );
+};
+
+export const deleteField = async (id) => {
   const db = await openDatabase();
 
-  const existing = await db.getAllAsync(
-    'SELECT * FROM plant_fields WHERE field_id = ? AND year = ?',
-    fieldId,
-    year
-  );
+  try {
+    await db.runAsync('DELETE FROM field_plants WHERE field_id = ?', [id]);
+    await db.runAsync('DELETE FROM fields WHERE id = ?', [id]);
 
-  if (existing.length > 0) {
-    console.log("Na tomto záhonu už je rostlina v tomto roce!");
-    return null;
+    console.log(`Záhon s ID ${id} byl úspěšně smazán.`);
+  } catch (error) {
+    console.error("Chyba při mazání záhonu:", error);
   }
-
-  await db.runAsync(
-    'INSERT INTO plant_fields (plant_id, field_id, year) VALUES (?, ?, ?)',
-    plantId,
-    fieldId,
-    year
-  );
-  console.log(`Rostlina ${plantId} byla přidána na pole ${fieldId} pro rok ${year}`);
 };
-export const removePlantFromField = async (fieldId, year) => {
-  const db = await openDatabase();
-  await db.runAsync(
-    'DELETE FROM plant_fields WHERE field_id = ? AND year = ?',
-    fieldId,
-    year
-  );
-  console.log(`Rostlina na poli ${fieldId} pro rok ${year} byla odstraněna.`);
-};
-export const deleteField = async (fieldId) => {
-  const db = await openDatabase();
-  const plants = await db.getAllAsync(
-    'SELECT * FROM plant_fields WHERE field_id = ?',
-    fieldId
-  );
 
-  if (plants.length > 0) {
-    console.log("Tento záhon obsahuje rostliny, nelze jej smazat!");
-    return { success: false, message: "Záhon obsahuje rostliny a nelze jej odstranit." };
-  }
-  await db.runAsync('DELETE FROM fields WHERE id = ?', fieldId);
-  console.log(`Záhon ${fieldId} byl odstraněn.`);
-  return { success: true, message: "Záhon byl úspěšně odstraněn." };
+
+export const insertGreenhouse = async (name, location, photo) => {
+  const db = await openDatabase();
+  return await db.runAsync('INSERT INTO greenhouses (name, location, photo) VALUES (?, ?, ?)', name, location, photo);
+};
+
+export const getAllGreenhouses = async () => {
+  const db = await openDatabase();
+  return await db.getAllAsync('SELECT * FROM greenhouses');
+};
+
+export const updateGreenhouse = async (id, name, location, photo) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'UPDATE greenhouses SET name = ?, location = ?, photo = ? WHERE id = ?',
+    name, location, photo, id
+  );
+};
+
+export const deleteGreenhouse = async (id) => {
+  const db = await openDatabase();
+  return await db.runAsync('DELETE FROM greenhouses WHERE id = ?', id);
+};
+
+export const addPlantToField = async (plantId, fieldId, year, count) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'INSERT INTO field_plants (plant_id, field_id, year, count) VALUES (?, ?, ?, ?)',
+    plantId, fieldId, year, count
+  );
+};
+
+export const removePlantFromField = async (fieldId, plantId, year) => {
+  const db = await openDatabase();
+  return await db.runAsync('DELETE FROM field_plants WHERE field_id = ? AND plant_id = ? AND year = ?', fieldId, plantId, year);
+};
+
+export const addPlantToGreenhouse = async (plantId, greenhouseId, year, count) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'INSERT INTO greenhouse_plants (plant_id, greenhouse_id, year, count) VALUES (?, ?, ?, ?)',
+    plantId, greenhouseId, year, count
+  );
+};
+
+export const removePlantFromGreenhouse = async (greenhouseId, plantId, year) => {
+  const db = await openDatabase();
+  return await db.runAsync('DELETE FROM greenhouse_plants WHERE greenhouse_id = ? AND plant_id = ? AND year = ?', greenhouseId, plantId, year);
+};
+
+
+export const insertPlantCalendarEntry = async (plantId, date, photo, harvestAmount, notes) => {
+  const db = await openDatabase();
+  return await db.runAsync(
+    'INSERT INTO plant_calendar (plant_id, date, photo, harvest_amount, notes) VALUES (?, ?, ?, ?, ?)',
+    plantId, date, photo, harvestAmount, notes
+  );
+};
+
+export const getPlantCalendar = async (plantId) => {
+  const db = await openDatabase();
+  return await db.getAllAsync('SELECT * FROM plant_calendar WHERE plant_id = ?', plantId);
+};
+
+export const getPlantsInField = async (fieldId) => {
+  const db = await openDatabase();
+  return await db.getAllAsync(`
+    SELECT p.* FROM plants p
+    JOIN field_plants fp ON p.id = fp.plant_id
+    WHERE fp.field_id = ?
+  `, fieldId);
+};
+
+export const getPlantsInGreenhouse = async (greenhouseId) => {
+  const db = await openDatabase();
+  return await db.getAllAsync(`
+    SELECT p.*, gp.year, gp.count 
+    FROM plants p
+    JOIN greenhouse_plants gp ON p.id = gp.plant_id
+    WHERE gp.greenhouse_id = ?
+  `, greenhouseId);
 };
