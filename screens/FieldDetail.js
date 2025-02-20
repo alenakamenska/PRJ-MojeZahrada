@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, Alert, Modal, TextInput, Dimensions, Image } from 'react-native';
 import { useRoute } from '@react-navigation/native'; 
-import { getAllPlants, getPlantsInField, addPlantToField } from '../database'; 
+import { getAllPlants, getPlantsInField, addPlantToField, removePlantFromField } from '../database'; 
 import AddButt from '../components/AddButt';
 import IconButt from '../components/IconButt';
 import { Picker } from '@react-native-picker/picker';
@@ -70,8 +70,17 @@ const GreenHouseDetail = () => {
       Alert.alert("Chyba", "Nepodařilo se přidat rostlinu.");
     }
   };
-  
 
+  const handleDeletePlant = async (id, year) => { 
+    try {
+      await removePlantFromField(fieldId, id, year);
+      loadPlants();  
+    } catch (error) {
+      console.error("Chyba při odstraňování rostliny:", error);
+      Alert.alert("Chyba", "Nepodařilo se odstranit rostlinu.");
+    }
+  };
+  
   return (
     <View style={styles.container}>
         <AddButt title="Přidat rostlinu" onPress={() => setIsModalVisible(true)} />
@@ -89,7 +98,7 @@ const GreenHouseDetail = () => {
                 <Text style={styles.plantText}>Počet semen: {item.count}</Text>
             </View>
             <View>
-                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id)} />
+                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id, item.year)} />
             </View>
             </View>
         )}

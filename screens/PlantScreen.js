@@ -50,6 +50,13 @@ const PlantsScreen = () => {
     }
   };
   
+  const plantImages = {
+    rajce: require('../assets/tomato.png'),
+    okurka: require('../assets/cucumber.png'),
+    mrkev: require('../assets/carrot.png'),
+    cibule: require('../assets/onion.png'),
+    cuketa: require('../assets/zucchini.png'),
+  };
 
   return (
     <View style={styles.container}>
@@ -90,13 +97,15 @@ const PlantsScreen = () => {
         data={plants}
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+        const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+        return (
           <View style={styles.plantItem}>
-            <Image source={require('../assets/plant.png')} style={styles.plantImage} />
+            <Image source={plantImage} style={styles.plantImage} />
             <Text style={styles.plantName}>{item.name}</Text>
             <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id)} />
           </View>
-        )}
+        )}}
         contentContainerStyle={{ paddingBottom: 100 }}
       />
     </View>

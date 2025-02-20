@@ -31,7 +31,6 @@ export const createTables = async () => {
       is_out_of_stock BOOLEAN DEFAULT 0
     );
   `);
-
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS fields (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,13 +50,13 @@ export const createTables = async () => {
     );
   `);
 
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS field_plants (
       field_id INTEGER,
       plant_id INTEGER,
       year INTEGER,
       count INTEGER,
-      PRIMARY KEY (field_id, year),
       FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE,
       FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE
     );
@@ -238,7 +237,8 @@ export const getPlantCalendar = async (plantId) => {
 export const getPlantsInField = async (fieldId) => {
   const db = await openDatabase();
   return await db.getAllAsync(`
-    SELECT p.* FROM plants p
+    SELECT p.*, fp.year, fp.count
+    FROM plants p
     JOIN field_plants fp ON p.id = fp.plant_id
     WHERE fp.field_id = ?
   `, fieldId);

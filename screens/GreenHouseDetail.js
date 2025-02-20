@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, Alert, Modal, TextInput, Dimensions, Image } from 'react-native';
 import { useRoute } from '@react-navigation/native'; 
-import { getPlantById, getPlantsInGreenhouse, getAllPlants, addPlantToGreenhouse } from '../database'; 
+import { getPlantById, getPlantsInGreenhouse, getAllPlants, addPlantToGreenhouse, removePlantFromGreenhouse } from '../database'; 
 import AddButt from '../components/AddButt';
 import IconButt from '../components/IconButt';
 import { Picker } from '@react-native-picker/picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -70,7 +71,24 @@ const GreenHouseDetail = () => {
       Alert.alert("Chyba", "Nepodařilo se přidat rostlinu.");
     }
   };
-  
+
+  const handleDeletePlant = async (id, year) => {
+    try {
+      await removePlantFromGreenhouse(greenhouseId, id, year);
+      loadPlants();
+    } catch (error) {
+      console.error("Chyba při odstraňování rostliny:", error);
+      Alert.alert("Chyba", "Nepodařilo se odstranit rostlinu.");
+    }
+  };
+
+  const plantImages = {
+    rajce: require('../assets/tomato.png'),
+    okurka: require('../assets/cucumber.png'),
+    mrkev: require('../assets/carrot.png'),
+    cibule: require('../assets/onion.png'),
+    cuketa: require('../assets/zucchini.png'),
+  };
 
   return (
     <View style={styles.container}>
@@ -80,19 +98,21 @@ const GreenHouseDetail = () => {
         data={plants}
         numColumns={2} 
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+            const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+            return (
             <View style={styles.plantItem}>
-            <Image source={require('../assets/plant.png')} style={styles.plantImage} />
+            <Image source={plantImage} style={styles.plantImage} />
             <View>
                 <Text style={styles.plantName}>{item.name}</Text>
-                <Text style={styles.plantText}>Rok výsadby: {item.year}</Text>
+                <Text style={styles.plantText}><Ionicons name="calendar-sharp"></Ionicons> {item.year}</Text>
                 <Text style={styles.plantText}>Počet semen: {item.count}</Text>
             </View>
             <View>
-                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id)} />
+                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id, item.year)} />
             </View>
             </View>
-        )}
+        )}}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListFooterComponent={<View style={{ height: 50 }} />} 
         />
