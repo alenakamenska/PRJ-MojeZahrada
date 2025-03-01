@@ -6,6 +6,7 @@ import AddButt from '../components/AddButt';
 import IconButt from '../components/IconButt';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import plantImages from '../components/plantImages';
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,13 +83,6 @@ const GreenHouseDetail = () => {
     }
   };
 
-  const plantImages = {
-    rajce: require('../assets/tomato.png'),
-    okurka: require('../assets/cucumber.png'),
-    mrkev: require('../assets/carrot.png'),
-    cibule: require('../assets/onion.png'),
-    cuketa: require('../assets/zucchini.png'),
-  };
 
   return (
     <View style={styles.container}>

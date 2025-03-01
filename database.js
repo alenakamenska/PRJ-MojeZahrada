@@ -253,3 +253,23 @@ export const getPlantsInGreenhouse = async (greenhouseId) => {
     WHERE gp.greenhouse_id = ?
   `, greenhouseId);
 };
+
+export const getPlantsInFieldDet = async (plantId) => {
+  const db = await openDatabase();
+  return await db.getAllAsync(`
+    SELECT f.name AS field_name, f.location AS field_location, fp.year, fp.count
+    FROM fields f
+    JOIN field_plants fp ON f.id = fp.field_id
+    WHERE fp.plant_id = ?
+  `, plantId);
+};
+
+export const getPlantsInGreenhouseDet = async (plantId) => {
+  const db = await openDatabase();
+  return await db.getAllAsync(`
+    SELECT g.name AS greenhouse_name, g.location AS greenhouse_location, gp.year, gp.count
+    FROM greenhouses g
+    JOIN greenhouse_plants gp ON g.id = gp.greenhouse_id
+    WHERE gp.plant_id = ?
+  `, plantId);
+};

@@ -5,6 +5,7 @@ import { getAllPlants, getPlantsInField, addPlantToField, removePlantFromField }
 import AddButt from '../components/AddButt';
 import IconButt from '../components/IconButt';
 import { Picker } from '@react-native-picker/picker';
+import plantImages from '../components/plantImages';
 
 const { width, height } = Dimensions.get('window');
 
@@ -80,6 +81,7 @@ const GreenHouseDetail = () => {
       Alert.alert("Chyba", "Nepodařilo se odstranit rostlinu.");
     }
   };
+
   
   return (
     <View style={styles.container}>
@@ -89,9 +91,11 @@ const GreenHouseDetail = () => {
         data={plants}
         numColumns={2} 
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+          return (
             <View style={styles.plantItem}>
-            <Image source={require('../assets/plant.png')} style={styles.plantImage} />
+            <Image source={plantImage} style={styles.plantImage} />
             <View>
                 <Text style={styles.plantName}>{item.name}</Text>
                 <Text style={styles.plantText}>Rok výsadby: {item.year}</Text>
@@ -101,7 +105,8 @@ const GreenHouseDetail = () => {
                 <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id, item.year)} />
             </View>
             </View>
-        )}
+        );
+      }}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListFooterComponent={<View style={{ height: 50 }} />} 
         />

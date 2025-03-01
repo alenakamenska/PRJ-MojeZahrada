@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, Modal, StyleSheet, Image, TextInput, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Modal, StyleSheet, Image, TextInput, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import { insertPlant, getAllPlants, getAllSeeds, deletePlant } from '../database'; 
 import { Picker } from '@react-native-picker/picker'; 
+import { useNavigation } from '@react-navigation/native';
 import IconButt from '../components/IconButt';
-import AddButt from '../components/AddButt'
+import AddButt from '../components/AddButt';
+import plantImages from '../components/plantImages';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,50 +15,40 @@ const PlantsScreen = () => {
   const [selectedSeed, setSelectedSeed] = useState(null);
   const [newPlantName, setNewPlantName] = useState('');
   const [showModal, setShowModal] = useState(false);
-
-  const loadSeeds = async () => {
-    const allSeeds = await getAllSeeds();
-    setSeeds(allSeeds);
-  };
-
-  const loadPlants = async () => {
-    const allPlants = await getAllPlants();
-    setPlants(allPlants);
-  };
+  const navigation = useNavigation();
 
   useEffect(() => {
+    const loadSeeds = async () => {
+      const allSeeds = await getAllSeeds();
+      setSeeds(allSeeds);
+    };
+    const loadPlants = async () => {
+      const allPlants = await getAllPlants();
+      setPlants(allPlants);
+    };
     loadSeeds();
     loadPlants();
   }, []);
 
   const addPlant = async () => {
-    if (newPlantName && selectedSeed) {
-      await insertPlant(newPlantName, selectedSeed.id);
+    if (newPlantName) {
+      await insertPlant(newPlantName, selectedSeed ? selectedSeed.id : null);
       setShowModal(false);
-      loadPlants();
       setNewPlantName('');
       setSelectedSeed(null);
+      const allPlants = await getAllPlants();
+      setPlants(allPlants);
     } else {
-      alert('Zadejte název rostliny a vyberte semínko!');
+      alert('Zadejte název rostliny!');
     }
   };
+
   const handleDeletePlant = async (id) => {
-    console.log('Mazání rostliny s ID:', id);
-    try {
-      await deletePlant(id);
-      loadPlants();
-    } catch (error) {
-      console.error('Chyba při mazání rostliny:', error);
-    }
+    await deletePlant(id);
+    const allPlants = await getAllPlants();
+    setPlants(allPlants);
   };
-  
-  const plantImages = {
-    rajce: require('../assets/tomato.png'),
-    okurka: require('../assets/cucumber.png'),
-    mrkev: require('../assets/carrot.png'),
-    cibule: require('../assets/onion.png'),
-    cuketa: require('../assets/zucchini.png'),
-  };
+
 
   return (
     <View style={styles.container}>
@@ -74,17 +66,16 @@ const PlantsScreen = () => {
               onChangeText={setNewPlantName}
             />
             <Text>Semínka</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedSeed}
-                onValueChange={(itemValue) => setSelectedSeed(itemValue)}
-                style={styles.picker}
-              >
-                {seeds.map((seed) => (
-                  <Picker.Item key={seed.id} label={seed.purchase_place} value={seed} />
-                ))}
-              </Picker>
-            </View>
+            <Picker
+              selectedValue={selectedSeed}
+              onValueChange={(itemValue) => setSelectedSeed(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Bez semínka" value={null} />
+              {seeds.map((seed) => (
+                <Picker.Item key={seed.id} label={seed.purchase_place} value={seed} />
+              ))}
+            </Picker>
             <View style={styles.butt}>
               <AddButt title="Přidat rostlinu" onPress={addPlant} />
               <AddButt title="Zavřít" onPress={() => setShowModal(false)} />
@@ -98,14 +89,23 @@ const PlantsScreen = () => {
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-        const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
-        return (
-          <View style={styles.plantItem}>
-            <Image source={plantImage} style={styles.plantImage} />
-            <Text style={styles.plantName}>{item.name}</Text>
-            <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id)} />
-          </View>
-        )}}
+          const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+          return (
+            <View style={styles.plantItem}>
+              <Image source={plantImage} style={styles.plantImage} />
+              <Text style={styles.plantName}>{item.name}</Text>
+              <View style={styles.iconContainer}>
+                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDeletePlant(item.id)} />
+                <IconButt 
+                  icon={'information-circle-sharp'} 
+                  size={30} 
+                  color={'#d4a373'}  
+                  onPress={() => navigation.navigate('PlantDetail', { plantId: item.id })}
+                />
+              </View>
+            </View>
+          );
+        }}
         contentContainerStyle={{ paddingBottom: 100 }}
       />
     </View>
@@ -130,11 +130,6 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 15,
     borderRadius: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
     alignItems: 'center'
   },
   plantImage: {
@@ -145,11 +140,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   plantName: {
-    fontSize: 23,
-    fontWeight: '400'
+    fontSize: 20,
+    fontWeight: 'bold'
   },
-  plantText: {
-    fontSize: 18
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 10
   },
   modalBackground: {
     flex: 1,
@@ -179,13 +177,6 @@ const styles = StyleSheet.create({
   },
   picker:{
     width: '100%',
-  },
-  pickerContainer: {
-    width: '100%',
-    borderColor: '#333',
-    borderWidth: 1,
-    borderRadius: 2,
-    overflow: 'hidden', 
   },
 });
 
