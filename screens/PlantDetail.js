@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Modal,
-  TextInput,
-  Alert,
-} from 'react-native';
-import {
-  getPlantById,
-  getPlantsInFieldDet,
-  getPlantsInGreenhouseDet,
-  getPlantCalendar,
-  insertPlantCalendarEntry,
-} from '../database';
+import { View, Text, StyleSheet, ScrollView, Modal, TextInput, Alert, TouchableOpacity, Image, Dimensions } from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+import moment from 'moment';
+import 'moment/locale/cs';
+import * as ImagePicker from 'expo-image-picker';
+import { getPlantById, getPlantsInFieldDet, getPlantsInGreenhouseDet, getPlantCalendar, insertPlantCalendarEntry } from '../database';
 import AddButt from '../components/AddButt';
+
+const { width, height } = Dimensions.get('window');
 
 const PlantDetail = ({ route }) => {
   const { plantId } = route.params;
@@ -24,13 +16,33 @@ const PlantDetail = ({ route }) => {
   const [fields, setFields] = useState([]);
   const [greenhouses, setGreenhouses] = useState([]);
   const [calendar, setCalendar] = useState([]);
+  const [markedDates, setMarkedDates] = useState({});
+  const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
+  const [photo, setPhoto] = useState('');
+  const [harvestAmount, setHarvestAmount] = useState('');
+  const [notes, setNotes] = useState('');
+  const [selectedNote, setSelectedNote] = useState(''); 
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [newEntry, setNewEntry] = useState({
-    date: '',
-    photo: '',
-    harvestAmount: '',
-    notes: '',
-  });
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState('');
+
+
+  LocaleConfig.locales['cs'] = {
+    monthNames: [
+      'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
+      'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
+    ],
+    monthNamesShort: [
+      'Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer',
+      'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'
+    ],
+    dayNames: [
+      'Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'
+    ],
+    dayNamesShort: ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'],
+    today: 'Dnes'
+  };
+  LocaleConfig.defaultLocale = 'cs';
 
   useEffect(() => {
     loadPlantData();
@@ -45,34 +57,72 @@ const PlantDetail = ({ route }) => {
     setFields(fieldData);
     setGreenhouses(greenhouseData);
     setCalendar(calendarData);
+    markCalendarDates(calendarData);
+  };
+
+  const markCalendarDates = (entries) => {
+    const marks = {};
+    entries.forEach(entry => {
+      marks[entry.date] = { marked: true, dotColor: 'green' };
+    });
+    setMarkedDates(marks);
+  };
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Přístup odmítnut", "Aplikace potřebuje přístup k fotkám.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setPhoto(result.assets[0].uri);
+    }
   };
 
   const handleSaveEntry = async () => {
-    if (!newEntry.date.trim()) {
+    if (!date.trim()) {
       Alert.alert('Chyba', 'Datum je povinné!');
       return;
     }
-    await insertPlantCalendarEntry(
-      plantId,
-      newEntry.date,
-      newEntry.photo,
-      newEntry.harvestAmount,
-      newEntry.notes
-    );
+    await insertPlantCalendarEntry(plantId, date, photo, harvestAmount, notes);
     setIsFormVisible(false);
-    setNewEntry({ date: '', photo: '', harvestAmount: '', notes: '' });
-    loadPlantData();
+    setDate(moment().format('YYYY-MM-DD')); 
+    setPhoto('');
+    setHarvestAmount('');
+    setNotes('');
+    loadPlantData();  
+  };
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
   };
 
-  const safeGetFieldData = (field) => ({
-    name: field.field_name || 'Neznámý záhon',
-    year: field.year || 'Neznámý rok',
-  });
-  
-  const safeGetGreenhouseData = (greenhouse) => ({
-    name: greenhouse.greenhouse_name || 'Neznámý skleník',
-    year: greenhouse.year || 'Neznámý rok',
-  });
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (selectedDate) => {
+    setDate(moment(selectedDate).format('YYYY-MM-DD'));
+    hideDatePicker();
+  };
+
+  const handleDayPress = (day) => {
+    setDate(day.dateString);
+    const selectedEntry = calendar.find(entry => entry.date === day.dateString);
+    if (selectedEntry) {
+      setSelectedNote(selectedEntry.notes);
+      setSelectedPhoto(selectedEntry.photo); 
+    } else {
+      setSelectedNote('');
+      setSelectedPhoto('');  
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -88,120 +138,104 @@ const PlantDetail = ({ route }) => {
 
       <Text style={styles.sectionTitle}>Záhony</Text>
       {fields.length > 0 ? (
-        fields.map((field, index) => {
-          const { name, year } = safeGetFieldData(field);
-          return (
-            <Text key={index}>
-              {name} ({year})
-            </Text>
-          );
-        })
+        fields.map((field, index) => (
+          <Text key={index}>{field.field_name} ({field.year})</Text>
+        ))
       ) : (
         <Text>Žádné pole nenalezeno</Text>
       )}
 
       <Text style={styles.sectionTitle}>Skleníky</Text>
       {greenhouses.length > 0 ? (
-        greenhouses.map((greenhouse, index) => {
-          const { name, year } = safeGetGreenhouseData(greenhouse);
-          return (
-            <Text key={index}>
-              {name} ({year})
-            </Text>
-          );
-        })
+        greenhouses.map((greenhouse, index) => (
+          <Text key={index}>{greenhouse.greenhouse_name} ({greenhouse.year})</Text>
+        ))
       ) : (
         <Text>Žádný skleník nenalezen</Text>
       )}
 
-      <Text style={styles.sectionTitle}>Kalendář záznamů</Text>
-      {calendar.length > 0 ? (
-        calendar.map((entry, index) => (
-          <View key={index} style={styles.entry}>
-            <Text>
-              {entry.date} - {entry.notes || 'Bez poznámek'}
-            </Text>
-            {entry.photo ? (
-              <Image source={{ uri: entry.photo }} style={styles.entryImage} />
-            ) : null}
-          </View>
-        ))
-      ) : (
-        <Text>Žádné záznamy</Text>
-      )}
-
       <AddButt title="Přidat záznam" onPress={() => setIsFormVisible(true)} />
-
+    <Text style={styles.title}>Kalendář</Text>
+      <Calendar
+        onDayPress={handleDayPress}
+        monthFormat={'MMMM yyyy'}
+        firstDay={1}
+        markedDates={markedDates}
+        theme={{
+          todayTextColor: 'brown',
+          arrowColor: 'green',
+        }}
+      />
+      <Text style={styles.title}>Poznámky</Text>
+      <View style={styles.noteContainer}>
+        {selectedNote ? (
+          <Text style={styles.selectedNote}>
+            Poznámka pro {moment(date).format('DD.MM.YYYY')}: {selectedNote}
+          </Text>
+        ) : (
+          <Text style={styles.selectedNote}>
+            Žádná poznámka pro {moment(date).format('DD.MM.YYYY')}
+          </Text>
+        )}
+        {selectedPhoto ? (
+          <Image source={{ uri: selectedPhoto }} style={styles.image} />
+        ) : null}
+      </View>
       <Modal visible={isFormVisible} transparent={true} animationType="slide">
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
             <Text>Datum</Text>
-            <TextInput
-              style={styles.input}
-              value={newEntry.date}
-              onChangeText={(text) =>
-                setNewEntry({ ...newEntry, date: text })
-              }
-            />
-            <Text>Foto (URL)</Text>
-            <TextInput
-              style={styles.input}
-              value={newEntry.photo}
-              onChangeText={(text) =>
-                setNewEntry({ ...newEntry, photo: text })
-              }
-            />
+            <TouchableOpacity onPress={showDatePicker}>
+              <Text>{date ? moment(date).format('DD.MM.YYYY') : 'Vyberte datum'}</Text>
+            </TouchableOpacity>
+            <Text>Foto</Text>
+            <TouchableOpacity onPress={pickImage}>
+              <Text>{photo ? 'Změnit fotku' : 'Vyberte fotku'}</Text>
+            </TouchableOpacity>
+            {photo ? (
+              <Image source={{ uri: photo }} style={styles.image} />
+            ) : null}
             <Text>Úroda</Text>
             <TextInput
               style={styles.input}
-              value={newEntry.harvestAmount}
-              onChangeText={(text) =>
-                setNewEntry({ ...newEntry, harvestAmount: text })
-              }
+              value={harvestAmount}
+              onChangeText={(text) => setHarvestAmount(text)}
             />
             <Text>Poznámky</Text>
             <TextInput
               style={styles.input}
-              value={newEntry.notes}
-              onChangeText={(text) =>
-                setNewEntry({ ...newEntry, notes: text })
-              }
+              value={notes}
+              onChangeText={(text) => setNotes(text)}
             />
             <AddButt title="Uložit" onPress={handleSaveEntry} />
             <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
           </View>
         </View>
       </Modal>
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        date={new Date(date)}
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20 
+    padding: 20
   },
   title: { 
     fontSize: 24, 
     fontWeight: 'bold', 
-    marginBottom: 10 
-   },
-  debugInfo: { 
-    fontSize: 12, 
-    color: 'gray', 
     marginBottom: 10 
   },
   sectionTitle: { 
     fontSize: 20, 
     fontWeight: 'bold', 
     marginTop: 20 
-  },
-  entry: { 
-    marginVertical: 10 
-  },
-  entryImage: { 
-    width: 100, 
-    height: 100, 
-    marginTop: 5 
   },
   modalBackground: {
     flex: 1,
@@ -220,6 +254,18 @@ const styles = StyleSheet.create({
     marginBottom: 10, 
     padding: 5 
   },
+  image: {
+    width: width - 50,
+    height: height/2,
+    marginVertical: 10,
+    borderRadius: 10,
+  },
+  noteContainer: {
+    marginTop: 20,
+  },
+  selectedNote: {
+    fontSize: 20,
+  }
 });
 
 export default PlantDetail;
