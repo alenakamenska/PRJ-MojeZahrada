@@ -21,6 +21,7 @@ import AddButt from '../components/AddButt';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import PhotoButt from '../components/PhotoButt';
 
 const { width, height } = Dimensions.get('window');
 
@@ -114,7 +115,7 @@ export const FieldsScreen = () => {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyMessage}>Žádné záhony zatím nejsou přidány.</Text>
+            <Text style={styles.emptyMessage}>Žádné záhony zatím nejsou přidány</Text>
           )}
         </View>
       </ScrollView>
@@ -149,10 +150,8 @@ export const FieldsScreen = () => {
               onChangeText={setSoilType}
             />
             <Text>Foto (URL)</Text>
-            <TouchableOpacity onPress={pickImage} style={styles.photoButton}>
-              <Text style={styles.photoButtonText}>Vybrat fotku</Text>
-            </TouchableOpacity>
-            {photo && <Image source={{ uri: photo }} style={styles.previewImage} />}
+            <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
+            {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
             <View style={styles.butt}>
               <AddButt title="Uložit" onPress={handleSave} />
               <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
@@ -203,7 +202,7 @@ const styles = StyleSheet.create({
     padding: 35,
     borderRadius: 10,
     width: width * 0.8,
-    height: height / 2,
+    height: height / 1.5,
   },
   butt: {
     flexDirection: 'row',
@@ -236,6 +235,13 @@ const styles = StyleSheet.create({
     color: 'gray',
     textAlign: 'center',
     marginTop: 20,
+    fontStyle: 'italic',
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginVertical: 10,
   },
 });
 

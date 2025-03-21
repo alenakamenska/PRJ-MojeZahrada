@@ -6,6 +6,7 @@ import AddButt from '../components/AddButt';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import PhotoButt from '../components/PhotoButt'
 
 const { width, height } = Dimensions.get('window');
 
@@ -130,13 +131,8 @@ export const GardenScreen = () => {
               value={location}
               onChangeText={setLocation}
             />
-
-            <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
-              <Text style={styles.imageButtonText}>{photo ? 'Změnit fotografii' : 'Vybrat fotografii'}</Text>
-            </TouchableOpacity>
-
-            {photo && <Image source={{ uri: photo }} style={styles.imagePreview} />}
-
+            <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
+            {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
             <View style={styles.butt}>
               <AddButt title="Uložit" onPress={handleSave} />
               <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
@@ -208,12 +204,11 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
   },
-  imagePreview: {
-    marginTop: 10,
+  previewImage: {
     width: 100,
     height: 100,
     borderRadius: 10,
-    resizeMode: 'cover',
+    marginVertical: 10,
   },
   icons: {
     flexDirection: 'row',

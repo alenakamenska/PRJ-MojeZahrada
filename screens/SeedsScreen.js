@@ -5,6 +5,7 @@ import { createSeedsTable, insertSeed, deleteSeed, updateSeed, getAllSeeds } fro
 import IconButt from '../components/IconButt';
 import AddButt from '../components/AddButt';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import PhotoButt from '../components/PhotoButt'
 
 const { width, height } = Dimensions.get('window');
 
@@ -85,11 +86,12 @@ export const SeedsScreen = props => {
         >
           <View style={styles.modalBackground}>
             <View style={styles.modalContent}>
-              <Text>Datum nákupu</Text>
+              <Text>Rok nákupu</Text>
               <TextInput
                 style={styles.input}
-                placeholder="YYYY-MM-DD"
+                placeholder="2025"
                 value={purchaseDate}
+                keyboardType="numeric"
                 onChangeText={setPurchaseDate}
               />
               <Text>Místo nákupu</Text>
@@ -116,10 +118,8 @@ export const SeedsScreen = props => {
                 onChangeText={setQuantity}
               />
               <Text>Fotka</Text>
-              <TouchableOpacity onPress={pickImage} style={styles.photoButton}>
-                <Text style={styles.photoButtonText}>Vybrat fotku</Text>
-              </TouchableOpacity>
-              {photo && <Image source={{ uri: photo }} style={styles.previewImage} />}
+              <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
+              {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
               <View style={styles.butt}>
                 <AddButt title="Uložit" onPress={handleSave} />
                 <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />

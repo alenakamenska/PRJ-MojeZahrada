@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Modal, TextInput, Alert, TouchableOpacity, Image, Dimensions } from 'react-native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { View, Text, StyleSheet, ScrollView, Modal, TextInput, Alert, Image, Dimensions } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import moment from 'moment';
 import 'moment/locale/cs';
 import * as ImagePicker from 'expo-image-picker';
 import { getPlantById, getPlantsInFieldDet, getPlantsInGreenhouseDet, getPlantCalendar, insertPlantCalendarEntry } from '../database';
 import AddButt from '../components/AddButt';
+import PhotoButt from '../components/PhotoButt'
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,8 +22,8 @@ const PlantDetail = ({ route }) => {
   const [harvestAmount, setHarvestAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedNote, setSelectedNote] = useState(''); 
+  const [selectedHarvest, setSelectedHarvest] = useState(''); 
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState('');
 
 
@@ -99,9 +99,6 @@ const PlantDetail = ({ route }) => {
     setNotes('');
     loadPlantData();  
   };
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
 
   const hideDatePicker = () => {
     setDatePickerVisibility(false);
@@ -118,9 +115,12 @@ const PlantDetail = ({ route }) => {
     if (selectedEntry) {
       setSelectedNote(selectedEntry.notes);
       setSelectedPhoto(selectedEntry.photo); 
+      setSelectedHarvest(selectedEntry.harvest_amount)
+      console.log('Vybraný záznam:', selectedEntry);
     } else {
       setSelectedNote('');
-      setSelectedPhoto('');  
+      setSelectedPhoto(''); 
+      setSelectedHarvest('') 
     }
   };
 
@@ -136,69 +136,85 @@ const PlantDetail = ({ route }) => {
         <Text>Načítání dat...</Text>
       )}
 
-      <Text style={styles.sectionTitle}>Záhony</Text>
-      {fields.length > 0 ? (
-        fields.map((field, index) => (
-          <Text key={index}>{field.field_name} ({field.year})</Text>
-        ))
-      ) : (
-        <Text>Žádné pole nenalezeno</Text>
-      )}
+<View>
+  <Text style={styles.sectionTitle}>📍 Záhony</Text>
+  <View style={styles.listContainer}>
+    {fields.length > 0 ? (
+      fields.map((field, index) => (
+        <View key={index} style={styles.card}>
+          <Text style={styles.cardTitle}>{field.field_name}</Text>
+          <Text style={styles.cardSubtitle}>{field.year}</Text>
+        </View>
+      ))
+    ) : (
+      <Text style={styles.emptyText}>Žádné pole nenalezeno</Text>
+    )}
+  </View>
 
-      <Text style={styles.sectionTitle}>Skleníky</Text>
-      {greenhouses.length > 0 ? (
-        greenhouses.map((greenhouse, index) => (
-          <Text key={index}>{greenhouse.greenhouse_name} ({greenhouse.year})</Text>
-        ))
-      ) : (
-        <Text>Žádný skleník nenalezen</Text>
-      )}
+  <Text style={styles.sectionTitle}>🏡 Skleníky</Text>
+  <View style={styles.listContainer}>
+    {greenhouses.length > 0 ? (
+      greenhouses.map((greenhouse, index) => (
+        <View key={index} style={styles.card}>
+          <Text style={styles.cardTitle}>{greenhouse.greenhouse_name}</Text>
+          <Text style={styles.cardSubtitle}>{greenhouse.year}</Text>
+        </View>
+      ))
+    ) : (
+      <Text style={styles.emptyText}>Žádný skleník nenalezen</Text>
+    )}
+  </View>
+</View>
 
-      <AddButt title="Přidat záznam" onPress={() => setIsFormVisible(true)} />
     <Text style={styles.title}>Kalendář</Text>
-      <Calendar
-        onDayPress={handleDayPress}
-        monthFormat={'MMMM yyyy'}
-        firstDay={1}
-        markedDates={markedDates}
-        theme={{
-          todayTextColor: 'brown',
-          arrowColor: 'green',
-        }}
-      />
-      <Text style={styles.title}>Poznámky</Text>
-      <View style={styles.noteContainer}>
-        {selectedNote ? (
-          <Text style={styles.selectedNote}>
-            Poznámka pro {moment(date).format('DD.MM.YYYY')}: {selectedNote}
-          </Text>
-        ) : (
-          <Text style={styles.selectedNote}>
-            Žádná poznámka pro {moment(date).format('DD.MM.YYYY')}
-          </Text>
-        )}
-        {selectedPhoto ? (
-          <Image source={{ uri: selectedPhoto }} style={styles.image} />
-        ) : null}
-      </View>
+    <Calendar
+    onDayPress={handleDayPress}
+    monthFormat={'MMMM yyyy'}
+    firstDay={1}
+    markedDates={{
+        ...markedDates,
+        [date]: { selected: true, selectedColor: 'green' }, 
+    }}
+    theme={{
+        todayTextColor: 'red',
+        selectedDayBackgroundColor: 'green',
+        arrowColor: 'green',
+    }}
+    />
+     <AddButt title="Přidat záznam" onPress={() => setIsFormVisible(true)} />
+    <Text style={styles.sectionTitle}>Vybraný den: </Text>
+    <View style={styles.dateContainer}>
+      <Text style={styles.dateText}>{moment(date).format('DD.MM.YYYY')}</Text>
+    </View>
+
+    <Text style={styles.sectionTitle}>Poznámky</Text>
+    <View style={styles.noteBox}>
+      <Text style={styles.noteText}>
+        {selectedNote || 'Žádná poznámka pro tento den'}
+      </Text>
+    </View>
+
+    <Text style={styles.sectionTitle}>Sklizeno plodů</Text>
+    <View style={styles.harvestBox}>
+      <Text style={styles.harvestText}>{selectedHarvest || '0'}</Text>
+    </View>
+
+    <Text style={styles.sectionTitle}>Obrázek</Text>
+    {selectedPhoto ? (
+      <Image source={{ uri: selectedPhoto }} style={styles.image} />
+    ) : (
+      <Text style={styles.emptyText}>Žádná fotka</Text>
+    )}
       <Modal visible={isFormVisible} transparent={true} animationType="slide">
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
             <Text>Datum</Text>
-            <TouchableOpacity onPress={showDatePicker}>
-              <Text>{date ? moment(date).format('DD.MM.YYYY') : 'Vyberte datum'}</Text>
-            </TouchableOpacity>
-            <Text>Foto</Text>
-            <TouchableOpacity onPress={pickImage}>
-              <Text>{photo ? 'Změnit fotku' : 'Vyberte fotku'}</Text>
-            </TouchableOpacity>
-            {photo ? (
-              <Image source={{ uri: photo }} style={styles.image} />
-            ) : null}
+            <Text>{date ? moment(date).format('DD.MM.YYYY') : 'Vyberte datum'}</Text>
             <Text>Úroda</Text>
             <TextInput
               style={styles.input}
               value={harvestAmount}
+              keyboardType="numeric"
               onChangeText={(text) => setHarvestAmount(text)}
             />
             <Text>Poznámky</Text>
@@ -207,18 +223,16 @@ const PlantDetail = ({ route }) => {
               value={notes}
               onChangeText={(text) => setNotes(text)}
             />
+            <Text>Foto</Text>
+            <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
+            {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
+            <View style={styles.butt}>
             <AddButt title="Uložit" onPress={handleSaveEntry} />
             <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
+            </View>
           </View>
         </View>
       </Modal>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        date={new Date(date)}
-        onConfirm={handleConfirm}
-        onCancel={hideDatePicker}
-      />
     </ScrollView>
   );
 };
@@ -244,15 +258,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#fefae0',
     padding: 20,
     borderRadius: 10,
     width: '80%',
-  },
-  input: { 
-    borderBottomWidth: 1, 
-    marginBottom: 10, 
-    padding: 5 
   },
   image: {
     width: width - 50,
@@ -265,7 +274,90 @@ const styles = StyleSheet.create({
   },
   selectedNote: {
     fontSize: 20,
-  }
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 10,
+    borderRadius: 5,
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  listContainer: {
+    marginVertical: 10,
+  },
+  card: {
+    backgroundColor: 'white',
+    padding: 15,
+    marginVertical: 8,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4, 
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  cardSubtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  butt: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  dateContainer: {
+    backgroundColor: '#eaf2d7',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  dateText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2d6a4f',
+  },
+  noteBox: {
+    backgroundColor: '#fefae0',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#b08968',
+    marginBottom: 10,
+  },
+  noteText: {
+    fontSize: 18,
+    color: '#6a4c93',
+  },
+  harvestBox: {
+    backgroundColor: '#f8d7da',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  harvestText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#c1121f',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
 });
 
 export default PlantDetail;

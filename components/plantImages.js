@@ -4,6 +4,7 @@ const plantImages = {
     mrkev: require('../assets/carrot.png'),
     cibule: require('../assets/onion.png'),
     cuketa: require('../assets/zucchini.png'),
+    paprika: require('../assets/pepper.png'),
     default: require('../assets/plant.png') 
   };
   

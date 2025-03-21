@@ -30,24 +30,39 @@ const PlantsScreen = () => {
     loadPlants();
   }, []);
 
-  const addPlant = async () => {
-    if (newPlantName) {
-      await insertPlant(newPlantName, selectedSeed ? selectedSeed.id : null);
-      setShowModal(false);
-      setNewPlantName('');
-      setSelectedSeed(null);
-      const allPlants = await getAllPlants();
-      setPlants(allPlants);
-    } else {
-      alert('Zadejte název rostliny!');
-    }
-  };
 
   const handleDeletePlant = async (id) => {
     await deletePlant(id);
     const allPlants = await getAllPlants();
     setPlants(allPlants);
   };
+
+  useEffect(() => {
+    const loadSeedsAndPlants = async () => {
+      const allSeeds = await getAllSeeds();
+      const allPlants = await getAllPlants();
+      setSeeds(allSeeds);
+      setPlants(allPlants);
+    };
+  
+    loadSeedsAndPlants();
+  }, [showModal]); 
+  
+  const addPlant = async () => {
+    if (newPlantName) {
+      await insertPlant(newPlantName, selectedSeed ? selectedSeed.id : null);
+      setShowModal(false); 
+    } else {
+      alert('Zadejte název rostliny!');
+    }
+  };
+  
+  const handleOpenModal = () => {
+    setNewPlantName('');
+    setSelectedSeed(null);
+    setShowModal(true);
+  };
+  
 
 
   return (
