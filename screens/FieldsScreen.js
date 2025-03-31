@@ -14,6 +14,7 @@ import {
 import {
   insertField,
   getAllFields,
+  updateField,
   deleteField
 } from '../database';
 import IconButt from '../components/IconButt';
@@ -32,6 +33,7 @@ export const FieldsScreen = () => {
   const [soilType, setSoilType] = useState('');
   const [photo, setPhoto] = useState('');
   const [fields, setFields] = useState([]);
+  const [editingField, setEditingField] = useState(null);
   const navigation = useNavigation();
 
   const loadFields = async () => {
@@ -43,27 +45,38 @@ export const FieldsScreen = () => {
     loadFields();
   }, []);
 
-  const handleAddPress = async () => {
+  const handleAddPress = () => {
+    setEditingField(null);
+    setFieldName('');
+    setLocation('');
+    setSoilType('');
+    setPhoto('');
+    setIsFormVisible(true);
+  };
+
+  const handleEditPress = (field) => {
+    setEditingField(field);
+    setFieldName(field.name);
+    setLocation(field.location);
+    setSoilType(field.soil_type);
+    setPhoto(field.photo);
     setIsFormVisible(true);
   };
 
   const handleSave = async () => {
-    console.log("Před uložením:", fieldName, location, soilType, photo); 
     if (fieldName.trim() && location.trim() && soilType.trim()) {
-      await insertField(fieldName, location, soilType, photo);  
-      console.log("Záhon uložen.");
-      setFieldName('');
-      setLocation('');
-      setSoilType('');
-      setPhoto('');
+      if (editingField) {
+        await updateField(editingField.id, fieldName, location, soilType, photo);
+      } else {
+        await insertField(fieldName, location, soilType, photo);
+      }
       setIsFormVisible(false);
-      loadFields();  
-      Alert.alert('Úspěch', 'Záhon byl přidán!');
+      loadFields();
+      Alert.alert('Úspěch', editingField ? 'Záhon byl upraven!' : 'Záhon byl přidán!');
     } else {
       Alert.alert('Chyba', 'Všechna pole musí být vyplněná!');
     }
   };
-  
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -84,11 +97,8 @@ export const FieldsScreen = () => {
   };
 
   const handleDelete = async (id) => {
-    const result = await deleteField(id);
+    await deleteField(id);
     loadFields();
-    if (!result.success) {
-      Alert.alert("Chyba", result.message);
-    }
   };
 
   return (
@@ -97,63 +107,36 @@ export const FieldsScreen = () => {
       <Text style={styles.h1}>Seznam záhonů</Text>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.fieldList}>
-          {fields.length > 0 ? (
-            fields.map((field) => (
-              <View key={field.id} style={styles.fieldItem}>
-                {field.photo ? (
-                  <Image source={{ uri: field.photo }} style={styles.fieldImage} />
-                ) : null}
-                <Text style={styles.FTextH}>{field.name}</Text>
-                <Text style={styles.FText}><Ionicons name="location-sharp"></Ionicons> {field.location}</Text>
-                <Text style={styles.FText}>Typ půdy: {field.soil_type}</Text>
-                <View style={styles.icons}>
-                  <IconButt icon={'information-circle-sharp'} size={30} color={'#d4a373'}
-                    onPress={() => navigation.navigate('FieldDetail', { fieldId: field.id })}
-                  />
-                  <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDelete(field.id)} style={styles.delete}/>
-                </View>
+          {fields.map((field) => (
+            <View key={field.id} style={styles.fieldItem}>
+              {field.photo ? <Image source={{ uri: field.photo }} style={styles.fieldImage} /> : null}
+              <Text style={styles.FTextH}>{field.name}</Text>
+              <Text style={styles.FText}><Ionicons name="location-sharp" /> {field.location}</Text>
+              <Text style={styles.FText}>Typ půdy: {field.soil_type}</Text>
+              <View style={styles.icons}>
+                <IconButt icon={'information-circle-sharp'} size={30} color={'#d4a373'}
+                  onPress={() => navigation.navigate('FieldDetail', { fieldId: field.id })} />
+                <IconButt icon={'pencil-sharp'} size={30} onPress={() => handleEditPress(field)} />
+                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDelete(field.id)} />
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyMessage}>Žádné záhony zatím nejsou přidány</Text>
-          )}
+            </View>
+          ))}
         </View>
       </ScrollView>
 
-      <Modal
-        visible={isFormVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsFormVisible(false)}
-      >
+      <Modal visible={isFormVisible} animationType="slide" transparent={true} onRequestClose={() => setIsFormVisible(false)}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
             <Text>Název</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Název záhonu"
-              value={fieldName}
-              onChangeText={setFieldName}
-            />
+            <TextInput style={styles.input} placeholder="Název záhonu" value={fieldName} onChangeText={setFieldName} />
             <Text>Lokalita</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Lokalita"
-              value={location}
-              onChangeText={setLocation}
-            />
+            <TextInput style={styles.input} placeholder="Lokalita" value={location} onChangeText={setLocation} />
             <Text>Typ půdy</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Typ půdy"
-              value={soilType}
-              onChangeText={setSoilType}
-            />
-            <Text>Foto (URL)</Text>
+            <TextInput style={styles.input} placeholder="Typ půdy" value={soilType} onChangeText={setSoilType} />
             <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
             {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
             <View style={styles.butt}>
-              <AddButt title="Uložit" onPress={handleSave} />
+              <AddButt title={editingField ? "Uložit změny" : "Uložit"} onPress={handleSave} />
               <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
             </View>
           </View>
@@ -162,7 +145,6 @@ export const FieldsScreen = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

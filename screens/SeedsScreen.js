@@ -1,57 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ImageBackground, Dimensions, Text, Button, TextInput, Alert, Modal, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, TextInput, Alert, Modal, Image, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { createSeedsTable, insertSeed, deleteSeed, updateSeed, getAllSeeds } from '../database';
 import IconButt from '../components/IconButt';
 import AddButt from '../components/AddButt';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import PhotoButt from '../components/PhotoButt'
+import PhotoButt from '../components/PhotoButt';
 
 const { width, height } = Dimensions.get('window');
 
-export const SeedsScreen = props => {
+export const SeedsScreen = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [editingSeed, setEditingSeed] = useState(null);
   const [purchaseDate, setPurchaseDate] = useState('');
   const [purchasePlace, setPurchasePlace] = useState('');
   const [price, setPrice] = useState('');
-  const [photo, setPhoto] = useState(null); 
+  const [photo, setPhoto] = useState(null);
   const [quantity, setQuantity] = useState('');
   const [seeds, setSeeds] = useState([]);
 
   const handleAddPress = async () => {
+    setEditingSeed(null);
+    setPurchaseDate('');
+    setPurchasePlace('');
+    setPrice('');
+    setPhoto(null);
+    setQuantity('');
     setIsFormVisible(true);
     await createSeedsTable();
   };
 
+  const handleEditPress = (seed) => {
+    setEditingSeed(seed);
+    setPurchaseDate(seed.purchase_date);
+    setPurchasePlace(seed.purchase_place);
+    setPrice(seed.price.toString());
+    setPhoto(seed.photo);
+    setQuantity(seed.quantity.toString());
+    setIsFormVisible(true);
+  };
+
   const handleSave = async () => {
     if (purchaseDate.trim() && purchasePlace.trim() && price.trim() && quantity.trim()) {
-      await insertSeed(purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity), false);
-      setPurchaseDate('');
-      setPurchasePlace('');
-      setPrice('');
-      setPhoto(null);
-      setQuantity('');
+      if (editingSeed) {
+        await updateSeed(editingSeed.id, purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity));
+        Alert.alert('Úspěch', 'Semínko bylo aktualizováno!');
+      } else {
+        await insertSeed(purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity), false);
+        Alert.alert('Úspěch', 'Semínko bylo přidáno!');
+      }
       setIsFormVisible(false);
       loadSeeds();
-      Alert.alert('Úspěch', 'Semínko bylo přidáno!');
     } else {
       Alert.alert('Chyba', 'Všechna povinná pole musí být vyplněná!');
     }
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert("Přístup odmítnut", "Aplikace potřebuje přístup k fotkám.");
-      return;
-    }
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
-
     if (!result.canceled) {
       setPhoto(result.assets[0].uri);
     }
@@ -60,11 +70,6 @@ export const SeedsScreen = props => {
   const loadSeeds = async () => {
     const data = await getAllSeeds();
     setSeeds(data);
-  };
-
-  const handleUpdate = async (id, newPurchaseDate, newPurchasePlace, newPrice, newPhoto, newQuantity) => {
-    await updateSeed(id, newPurchaseDate, newPurchasePlace, parseFloat(newPrice), newPhoto, parseInt(newQuantity), false);
-    loadSeeds();
   };
 
   const handleDelete = async (id) => {
@@ -78,80 +83,54 @@ export const SeedsScreen = props => {
 
   return (
     <View style={styles.container}>
-        <Modal
-          visible={isFormVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setIsFormVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContent}>
-              <Text>Rok nákupu</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2025"
-                value={purchaseDate}
-                keyboardType="numeric"
-                onChangeText={setPurchaseDate}
-              />
-              <Text>Místo nákupu</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Obchod, trh apod."
-                value={purchasePlace}
-                onChangeText={setPurchasePlace}
-              />
-              <Text>Cena</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Cena v Kč"
-                value={price}
-                keyboardType="numeric"
-                onChangeText={setPrice}
-              />
-              <Text>Množství</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Počet"
-                value={quantity}
-                keyboardType="numeric"
-                onChangeText={setQuantity}
-              />
-              <Text>Fotka</Text>
-              <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
-              {photo ? <Image source={{ uri: photo }} style={styles.previewImage} /> : null}
-              <View style={styles.butt}>
-                <AddButt title="Uložit" onPress={handleSave} />
-                <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
+      <Modal
+        visible={isFormVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsFormVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text>Rok nákupu</Text>
+            <TextInput style={styles.input} value={purchaseDate} keyboardType="numeric" onChangeText={setPurchaseDate} />
+            <Text>Místo nákupu</Text>
+            <TextInput style={styles.input} value={purchasePlace} onChangeText={setPurchasePlace} />
+            <Text>Cena</Text>
+            <TextInput style={styles.input} value={price} keyboardType="numeric" onChangeText={setPrice} />
+            <Text>Množství</Text>
+            <TextInput style={styles.input} value={quantity} keyboardType="numeric" onChangeText={setQuantity} />
+            <Text>Fotka</Text>
+            <PhotoButt onPress={pickImage} title={photo ? 'Změnit fotku' : 'Vyberte fotku'} />
+            {photo && <Image source={{ uri: photo }} style={styles.previewImage} />}
+            <View style={styles.butt}>
+              <AddButt title="Uložit" onPress={handleSave} />
+              <AddButt title="Zavřít" onPress={() => setIsFormVisible(false)} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <AddButt title="Přidat semínka" onPress={handleAddPress} />
+      <Text style={styles.h1}>Seznam osiva</Text>
+      <ScrollView contentContainerStyle={styles.seedList}>
+        {seeds.map((seed) => (
+          <View key={seed.id} style={styles.seedItem}>
+            {seed.photo && <Image source={{ uri: seed.photo }} style={styles.seedImage} />}
+            <View style={styles.row}>
+              <View style={styles.textContainer}>
+                <Text><Ionicons name="calendar-sharp" /> {seed.purchase_date}</Text>
+                <Text><Ionicons name="location-sharp" /> {seed.purchase_place}</Text>
+                <Text>{seed.price} Kč</Text>
+                <Text>{seed.quantity} ks</Text>
+              </View>
+              <View style={styles.icons}>
+                <IconButt icon={'pencil-sharp'} size={30} onPress={() => handleEditPress(seed)} />
+                <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDelete(seed.id)} />
               </View>
             </View>
           </View>
-        </Modal>
-        <View>
-          <AddButt title="Přidat semínka" onPress={handleAddPress} />
-        </View>
-        <Text style={styles.h1}>Seznam osiva</Text>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={styles.seedList}>
-          {seeds.map((seed) => (
-            <View key={seed.id} style={styles.seedItem}>
-              {seed.photo && <Image source={{ uri: seed.photo }} style={styles.seedImage} />}
-              <View style={styles.row}>
-                <View style={styles.textContainer}>
-                  <Text style={styles.GText}><Ionicons name="calendar-sharp"></Ionicons> {seed.purchase_date}</Text>
-                  <Text style={styles.GText}><Ionicons name="location-sharp"></Ionicons> {seed.purchase_place}</Text>
-                  <Text style={styles.GText}>{seed.price} Kč</Text>
-                  <Text style={styles.GText}>{seed.quantity} ks</Text>
-                </View>
-                <View style={styles.icons}>
-                  <IconButt icon={'pencil-sharp'} size={30} onPress={() => handleUpdate(seed.id, seed.purchase_date, seed.purchase_place, seed.price, seed.photo, seed.quantity)} style={styles.change}/>
-                  <IconButt icon={'trash-sharp'} size={30} color={'#ff758f'} onPress={() => handleDelete(seed.id)} style={styles.delete}/>
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-        </ScrollView>
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -234,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '90%',
     alignItems: 'left',
-    height: height/2,
+    height: height/1.5,
   },
   seedList: {
     alignItems: 'center',

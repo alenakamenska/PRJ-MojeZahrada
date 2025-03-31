@@ -1,11 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack'; 
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useColorScheme } from 'react-native';
 
 import Home from "./screens/HomeScreen";
 import GardenScreen from "./screens/GardenScreen";
@@ -17,21 +16,20 @@ import GreenHouseDetail from './screens/GreenHouseDetail';
 import FieldDetail from './screens/FieldDetail';
 import PlantDetail from './screens/PlantDetail';
 
-export const SCREEN_HOME = "Home";
-export const SCREEN_GARDEN = "Garden";
-export const SCREEN_SEEDS = "Seeds";
-export const SCREEN_FIELDS = "Fields";
-export const SCREEN_PLANTS = "Plants";
+export const SCREEN_HOME = "HomeScreen";
+export const SCREEN_GARDEN = "GardenMain";
+export const SCREEN_SEEDS = "SeedsMain";
+export const SCREEN_FIELDS = "FieldsMain";
+export const SCREEN_PLANTS = "PlantsMain";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();  
-
 
 function GardenStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
-        name={SCREEN_GARDEN} 
+        name="GardenOverview" 
         component={GardenScreen} 
         options={{ headerShown: false }}  
       />
@@ -48,7 +46,7 @@ function FieldStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
-        name={SCREEN_FIELDS} 
+        name="FieldsOverview" 
         component={FieldsScreen} 
         options={{ headerShown: false }}  
       />
@@ -65,7 +63,7 @@ function PlantStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
-        name={SCREEN_PLANTS} 
+        name="PlantsOverview" 
         component={PlantScreen} 
         options={{ headerShown: false }}  
       />
@@ -78,9 +76,7 @@ function PlantStack() {
   );
 }
 
-
 export default function App() {
-  const scheme = useColorScheme();
   useEffect(() => {
     createTables().then(() => {
       console.log('Tabulky byly vytvořeny nebo již existují.');
@@ -88,20 +84,21 @@ export default function App() {
       console.error('Chyba při vytváření tabulek:', error);
     });
   }, []);
+
   return (
-    <NavigationContainer theme={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <NavigationContainer>
       <StatusBar barStyle="light-content" backgroundColor="#ccd5ae" />
       <Tab.Navigator
-        initialRouteName="Home"
+        initialRouteName={SCREEN_HOME}
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
+          tabBarIcon: ({ color, size }) => {
             let iconName;
             switch (route.name) {
               case SCREEN_HOME: iconName = "home-sharp"; break;
               case SCREEN_GARDEN: iconName = "leaf-sharp"; break;
-              case SCREEN_SEEDS: iconName = "water-sharp"; break
-              case SCREEN_FIELDS: iconName = "flower-sharp"; break
-              case SCREEN_PLANTS : iconName = "nutrition-sharp"; break
+              case SCREEN_SEEDS: iconName = "water-sharp"; break;
+              case SCREEN_FIELDS: iconName = "flower-sharp"; break;
+              case SCREEN_PLANTS: iconName = "nutrition-sharp"; break;
               default: iconName = "information-circle";
             }
             return <Ionicons name={iconName} size={size} color={color} />;

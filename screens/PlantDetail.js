@@ -6,7 +6,8 @@ import 'moment/locale/cs';
 import * as ImagePicker from 'expo-image-picker';
 import { getPlantById, getPlantsInFieldDet, getPlantsInGreenhouseDet, getPlantCalendar, insertPlantCalendarEntry } from '../database';
 import AddButt from '../components/AddButt';
-import PhotoButt from '../components/PhotoButt'
+import PhotoButt from '../components/PhotoButt';
+import Ionicons from 'react-native-vector-icons/Ionicons'
 
 const { width, height } = Dimensions.get('window');
 
@@ -157,7 +158,7 @@ const PlantDetail = ({ route }) => {
       greenhouses.map((greenhouse, index) => (
         <View key={index} style={styles.card}>
           <Text style={styles.cardTitle}>{greenhouse.greenhouse_name}</Text>
-          <Text style={styles.cardSubtitle}>{greenhouse.year}</Text>
+          <Text style={styles.cardSubtitle}><Ionicons name="calendar-sharp"></Ionicons> {greenhouse.year}</Text>
         </View>
       ))
     ) : (
@@ -183,8 +184,8 @@ const PlantDetail = ({ route }) => {
     />
      <AddButt title="Přidat záznam" onPress={() => setIsFormVisible(true)} />
     <Text style={styles.sectionTitle}>Vybraný den: </Text>
-    <View style={styles.dateContainer}>
-      <Text style={styles.dateText}>{moment(date).format('DD.MM.YYYY')}</Text>
+    <View style={styles.noteBox}>
+      <Text style={styles.noteText}>{moment(date).format('DD.MM.YYYY')}</Text>
     </View>
 
     <Text style={styles.sectionTitle}>Poznámky</Text>
@@ -195,8 +196,8 @@ const PlantDetail = ({ route }) => {
     </View>
 
     <Text style={styles.sectionTitle}>Sklizeno plodů</Text>
-    <View style={styles.harvestBox}>
-      <Text style={styles.harvestText}>{selectedHarvest || '0'}</Text>
+    <View style={styles.noteBox}>
+      <Text style={styles.noteText}>{selectedHarvest || '0'}</Text>
     </View>
 
     <Text style={styles.sectionTitle}>Obrázek</Text>
@@ -318,16 +319,11 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   dateContainer: {
-    backgroundColor: '#eaf2d7',
+    backgroundColor: '#ccd5ae',
     padding: 10,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 10,
-  },
-  dateText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#2d6a4f',
   },
   noteBox: {
     backgroundColor: '#fefae0',
@@ -336,21 +332,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#b08968',
     marginBottom: 10,
+    alignItems:'center',
   },
   noteText: {
-    fontSize: 18,
-    color: '#6a4c93',
-  },
-  harvestBox: {
-    backgroundColor: '#f8d7da',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  harvestText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#c1121f',
   },
   emptyText: {
     fontSize: 16,

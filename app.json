@@ -1,31 +1,37 @@
 {
   "expo": {
-    "name": "MyNewApp",
+    "name": "Moje zahrada",
     "slug": "MyNewApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/gardening.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000",
+      "fadeDuration": 0
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/gardener.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.alena2004.MyNewApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e9f2f501-35ac-4ff4-9b95-5db544283668"
+      }
+    },
+    "assetBundlePatterns": ["**/*"]
   }
 }
