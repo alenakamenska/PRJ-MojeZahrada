@@ -79,8 +79,8 @@ export const GardenScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AddButt title="Přidat skleník" onPress={handleAddPress} />
       <Text style={styles.h1}>Seznam skleniků</Text>
+      <AddButt title="Přidat skleník" onPress={handleAddPress} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.greenhouseList}>
           {greenhouses.map((sklenik) => (
@@ -172,7 +172,9 @@ const styles = StyleSheet.create({
   },
   butt: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 20,
+    marginTop: height/30,
+    justifyContent:'center'
   },
   imageButton: {
     marginTop: 10,
@@ -192,6 +194,7 @@ const styles = StyleSheet.create({
   },
   icons: {
     flexDirection: 'row',
+    gap: 20,
   },
   GText: {
     fontSize: 20,

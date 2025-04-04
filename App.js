@@ -75,6 +75,37 @@ function PlantStack() {
     </Stack.Navigator>
   );
 }
+function HomeStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="HomeMain" 
+        component={Home} 
+        options={{ headerShown: false }}  
+      />
+      <Stack.Screen 
+        name="GardenScreen" 
+        component={GardenScreen}  
+        options={{ headerShown: false }}  
+      />
+      <Stack.Screen 
+        name="SeedsScreen" 
+        component={SeedsScreen}  
+        options={{ headerShown: false }}  
+      />
+      <Stack.Screen 
+        name="PlantScreen" 
+        component={PlantScreen}  
+        options={{ headerShown: false }}  
+      />
+      <Stack.Screen 
+        name="FieldsScreen" 
+        component={FieldsScreen}  
+        options={{ headerShown: false }}  
+      />
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -107,7 +138,7 @@ export default function App() {
           tabBarInactiveTintColor: 'black',
         })}
       >
-        <Tab.Screen name={SCREEN_HOME} component={Home} options={{ title: 'Vítejte', headerStyle: { backgroundColor: '#ccd5ae' } }} />
+        <Tab.Screen name={SCREEN_HOME} component={HomeStack} options={{ title: 'Vítejte', headerStyle: { backgroundColor: '#ccd5ae' } }} />
         <Tab.Screen name={SCREEN_GARDEN} component={GardenStack} options={{ title: 'Skleníky', headerStyle: { backgroundColor: '#ccd5ae' } }} />
         <Tab.Screen name={SCREEN_FIELDS} component={FieldStack} options={{ title: 'Záhony', headerStyle: { backgroundColor: '#ccd5ae' } }} />
         <Tab.Screen name={SCREEN_PLANTS} component={PlantStack} options={{ title: 'Rostliny', headerStyle: { backgroundColor: '#ccd5ae' } }} />

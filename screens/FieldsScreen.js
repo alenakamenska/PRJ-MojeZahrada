@@ -103,8 +103,8 @@ export const FieldsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AddButt title="Přidat záhon" onPress={handleAddPress} />
       <Text style={styles.h1}>Seznam záhonů</Text>
+      <AddButt title="Přidat záhon" onPress={handleAddPress} />
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.fieldList}>
           {fields.map((field) => (
@@ -184,14 +184,17 @@ const styles = StyleSheet.create({
     padding: 35,
     borderRadius: 10,
     width: width * 0.8,
-    height: height / 1.5,
+    height: height / 1.8,
   },
   butt: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 20,
+    marginTop: height/100,
+    justifyContent:'center'
   },
   icons: {
     flexDirection: 'row',
+    gap: 20,
   },
   FText: {
     fontSize: 20,
@@ -204,6 +207,7 @@ const styles = StyleSheet.create({
   h1: {
     fontSize: 28,
     fontWeight: 'bold',
+    marginVertical: 20,
   },
   fieldImage: {
     width: '100%',

@@ -4,7 +4,7 @@
     "slug": "MyNewApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/gardening.png",
+    "icon": "./assets/gardener.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,7 +17,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/gardener.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#60b7ff"
       },
       "package": "com.alena2004.MyNewApp"
     },

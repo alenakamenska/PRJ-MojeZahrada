@@ -199,7 +199,9 @@ const styles = StyleSheet.create({
   },
   butt: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 20,
+    marginTop: height/30,
+    justifyContent:'center'
   },
   modalBackground: {
     flex: 1,
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '90%',
     alignItems: 'left',
-    height: height/1.5,
+    height: height/1.4,
   },
   seedList: {
     alignItems: 'center',

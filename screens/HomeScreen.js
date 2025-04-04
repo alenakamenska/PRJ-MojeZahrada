@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ImageBackground, Dimensions, Text, Button, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, ImageBackground, Dimensions, Text } from 'react-native';
 import AddButt from '../components/AddButt';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 export const HomeScreen = props => {
+
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -18,8 +21,10 @@ export const HomeScreen = props => {
           <Text style={styles.h1}>Vítejte v aplikaci Moje Zahrada</Text>
           <Text style={styles.h2}>Sledujte své rostliny, plánujte výsadbu a mějte svůj skleník vždy pod kontrolou!</Text>
           <View style={styles.butts}>
-            <AddButt title={'Moje skleníky'}></AddButt>
-            <AddButt title={'Moje osivo'}/>
+            <AddButt onPress={() => navigation.navigate('GardenScreen')} title={'Moje skleníky'}/>
+            <AddButt onPress={() => navigation.navigate('SeedsScreen')} title={'Moje osivo'}/>
+            <AddButt onPress={() => navigation.navigate('FieldsScreen')} title={'Moje záhony'}/>
+            <AddButt onPress={() => navigation.navigate('PlantScreen')} title={'Moje rostliny'}/>
           </View>
         </View>
       </ImageBackground>
@@ -72,13 +77,13 @@ const styles = StyleSheet.create({
   },
   butts: {
     flexDirection: 'row',
-    justifyContent: 'space-around', 
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 70, 
-    width: '100%', 
-    paddingHorizontal: 20, 
+    marginTop: height/10,
+    paddingHorizontal: 20,
+    gap: height/20,
   }
-  
 });
 
 export default HomeScreen;
