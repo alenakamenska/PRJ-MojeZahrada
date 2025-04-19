@@ -14,13 +14,15 @@ export const SeedsScreen = () => {
   const [editingSeed, setEditingSeed] = useState(null);
   const [purchaseDate, setPurchaseDate] = useState('');
   const [purchasePlace, setPurchasePlace] = useState('');
+  const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [photo, setPhoto] = useState(null);
   const [quantity, setQuantity] = useState('');
   const [seeds, setSeeds] = useState([]);
-
+  
   const handleAddPress = async () => {
     setEditingSeed(null);
+    setName('');
     setPurchaseDate('');
     setPurchasePlace('');
     setPrice('');
@@ -32,6 +34,7 @@ export const SeedsScreen = () => {
 
   const handleEditPress = (seed) => {
     setEditingSeed(seed);
+    setName(seed.name?.toString() || '');
     setPurchaseDate(seed.purchase_date);
     setPurchasePlace(seed.purchase_place);
     setPrice(seed.price.toString());
@@ -41,12 +44,12 @@ export const SeedsScreen = () => {
   };
 
   const handleSave = async () => {
-    if (purchaseDate.trim() && purchasePlace.trim() && price.trim() && quantity.trim()) {
+    if ( name.trim() && purchaseDate.trim() && purchasePlace.trim() && price.trim() && quantity.trim()) {
       if (editingSeed) {
-        await updateSeed(editingSeed.id, purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity));
+        await updateSeed(editingSeed.id, name, purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity));
         Alert.alert('Úspěch', 'Semínko bylo aktualizováno!');
       } else {
-        await insertSeed(purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity), false);
+        await insertSeed(name, purchaseDate, purchasePlace, parseFloat(price), photo, parseInt(quantity), false);
         Alert.alert('Úspěch', 'Semínko bylo přidáno!');
       }
       setIsFormVisible(false);
@@ -56,6 +59,7 @@ export const SeedsScreen = () => {
     }
   };
 
+  
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -93,6 +97,8 @@ export const SeedsScreen = () => {
           <View style={styles.modalContent}>
             <Text>Rok nákupu</Text>
             <TextInput style={styles.input} value={purchaseDate} keyboardType="numeric" onChangeText={setPurchaseDate} />
+            <Text>Název</Text>
+            <TextInput style={styles.input} value={name} onChangeText={setName} />
             <Text>Místo nákupu</Text>
             <TextInput style={styles.input} value={purchasePlace} onChangeText={setPurchasePlace} />
             <Text>Cena</Text>
@@ -118,6 +124,7 @@ export const SeedsScreen = () => {
             {seed.photo && <Image source={{ uri: seed.photo }} style={styles.seedImage} />}
             <View style={styles.row}>
               <View style={styles.textContainer}>
+                <Text>{seed.name}</Text>
                 <Text><Ionicons name="calendar-sharp" /> {seed.purchase_date}</Text>
                 <Text><Ionicons name="location-sharp" /> {seed.purchase_place}</Text>
                 <Text>{seed.price} Kč</Text>
@@ -215,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '90%',
     alignItems: 'left',
-    height: height/1.4,
+    height: height/1.3,
   },
   seedList: {
     alignItems: 'center',

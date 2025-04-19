@@ -88,7 +88,7 @@ const PlantsScreen = () => {
             >
               <Picker.Item label="Bez semínka" value={null} />
               {seeds.map((seed) => (
-                <Picker.Item key={seed.id} label={seed.purchase_place} value={seed} />
+                <Picker.Item key={seed.id} label={seed.name} value={seed} />
               ))}
             </Picker>
             <View style={styles.butt}>

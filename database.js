@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 // Otevření databáze
 export const openDatabase = async () => {
-  const db = await SQLite.openDatabaseAsync('gardening1.db');
+  const db = await SQLite.openDatabaseAsync('gardening2.db');
   await db.execAsync('PRAGMA foreign_keys = ON;');
   return db;
 };
@@ -23,6 +23,7 @@ export const createTables = async () => {
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS seeds (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
       purchase_date TEXT NOT NULL,
       purchase_place TEXT,
       price REAL,
@@ -31,6 +32,7 @@ export const createTables = async () => {
       is_out_of_stock BOOLEAN DEFAULT 0
     );
   `);
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS fields (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,11 +115,11 @@ export const deletePlant = async (id) => {
   return await db.runAsync('DELETE FROM plants WHERE id = ?', id);
 };
 
-export const insertSeed = async (purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
+export const insertSeed = async (name, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
   const db = await openDatabase();
   return await db.runAsync(
-    'INSERT INTO seeds (purchase_date, purchase_place, price, photo, quantity, is_out_of_stock) VALUES (?, ?, ?, ?, ?, ?)',
-    purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0
+    'INSERT INTO seeds (name, purchase_date, purchase_place, price, photo, quantity, is_out_of_stock) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    name, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0
   );
 };
 
@@ -126,11 +128,11 @@ export const getAllSeeds = async () => {
   return await db.getAllAsync('SELECT * FROM seeds');
 };
 
-export const updateSeed = async (id, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
+export const updateSeed = async (id, name, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock) => {
   const db = await openDatabase();
   return await db.runAsync(
-    'UPDATE seeds SET purchase_date = ?, purchase_place = ?, price = ?, photo = ?, quantity = ?, is_out_of_stock = ? WHERE id = ?',
-    purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0, id
+    'UPDATE seeds SET name = ?, purchase_date = ?, purchase_place = ?, price = ?, photo = ?, quantity = ?, is_out_of_stock = ? WHERE id = ?',
+    name, purchaseDate, purchasePlace, price, photo, quantity, isOutOfStock ? 1 : 0, id
   );
 };
 
