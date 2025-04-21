@@ -104,7 +104,14 @@ const PlantsScreen = () => {
         numColumns={2}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+          const nameLower = item.name.toLowerCase();
+          let plantImage = require('../assets/plant.png');
+          for (const key in plantImages) {
+            if (nameLower.includes(key)) {
+              plantImage = plantImages[key];
+              break;
+            }
+          }
           return (
             <View style={styles.plantItem}>
               <Image source={plantImage} style={styles.plantImage} />

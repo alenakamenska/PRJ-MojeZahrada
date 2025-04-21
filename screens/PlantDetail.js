@@ -137,7 +137,16 @@ const PlantDetail = ({ route }) => {
         <Text>Načítání dat...</Text>
       )}
 
+
 <View>
+<View>
+  <Text style={styles.sectionTitle}>🌱 Semínko</Text>
+  <View style={styles.card}>
+    <Text style={styles.cardTitle}>{plant && plant.seedName ? plant.seedName : 'Není zadáno'}</Text>
+  </View>
+</View>
+
+
   <Text style={styles.sectionTitle}>📍 Záhony</Text>
   <View style={styles.listContainer}>
     {fields.length > 0 ? (
@@ -343,6 +352,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
+  
 });
 
 export default PlantDetail;

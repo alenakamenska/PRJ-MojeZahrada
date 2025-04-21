@@ -1,6 +1,6 @@
 const plantImages = {
-    rajce: require('../assets/tomato.png'),
-    okurka: require('../assets/cucumber.png'),
+    rajče: require('../assets/tomato.png'),
+    okurk: require('../assets/cucumber.png'),
     mrkev: require('../assets/carrot.png'),
     cibule: require('../assets/onion.png'),
     cuketa: require('../assets/zucchini.png'),

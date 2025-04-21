@@ -97,12 +97,12 @@ export const insertPlant = async (name, seedId = null) => {
 
 export const getAllPlants = async () => {
   const db = await openDatabase();
-  return await db.getAllAsync('SELECT * FROM plants');
+  return await db.getAllAsync('SELECT plants.*, seeds.name AS seedName FROM plants LEFT JOIN seeds ON plants.seed_id = seeds.id');
 };
 
 export const getPlantById = async (id) => {
   const db = await openDatabase();
-  return await db.getFirstAsync('SELECT * FROM plants WHERE id = ?', id);
+  return await db.getFirstAsync('SELECT plants.*, seeds.name AS seedName FROM plants LEFT JOIN seeds ON plants.seed_id = seeds.id WHERE plants.id = ?', id);
 };
 
 export const updatePlant = async (id, name, seedId) => {
