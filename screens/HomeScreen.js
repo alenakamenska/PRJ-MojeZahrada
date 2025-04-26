@@ -20,12 +20,6 @@ export const HomeScreen = props => {
         <View style={styles.rectangle}>
           <Text style={styles.h1}>Vítejte v aplikaci Moje Zahrada</Text>
           <Text style={styles.h2}>Sledujte své rostliny, plánujte výsadbu a mějte svůj skleník vždy pod kontrolou!</Text>
-          <View style={styles.butts}>
-            <AddButt onPress={() => navigation.navigate('GardenScreen')} title={'Moje skleníky'}/>
-            <AddButt onPress={() => navigation.navigate('SeedsScreen')} title={'Moje osivo'}/>
-            <AddButt onPress={() => navigation.navigate('FieldsScreen')} title={'Moje záhony'}/>
-            <AddButt onPress={() => navigation.navigate('PlantScreen')} title={'Moje rostliny'}/>
-          </View>
         </View>
       </ImageBackground>
     </View>
@@ -75,15 +69,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: 'white'
   },
-  butts: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: height/10,
-    paddingHorizontal: 20,
-    gap: height/20,
-  }
 });
 
 export default HomeScreen;

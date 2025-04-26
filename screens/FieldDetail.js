@@ -6,6 +6,7 @@ import AddButt from '../components/AddButt';
 import IconButt from '../components/IconButt';
 import { Picker } from '@react-native-picker/picker';
 import plantImages from '../components/plantImages';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -85,20 +86,27 @@ const GreenHouseDetail = () => {
   
   return (
     <View style={styles.container}>
-        <AddButt title="Přidat rostlinu" onPress={() => setIsModalVisible(true)} />
       <Text style={styles.h1}>Seznam Rostlin</Text>
+      <AddButt title="Přidat rostlinu" onPress={() => setIsModalVisible(true)} />
       <FlatList
         data={plants}
         numColumns={2} 
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const plantImage = plantImages[item.name.toLowerCase()] || require('../assets/plant.png'); 
+          const nameLower = item.name.toLowerCase();
+          let plantImage = require('../assets/plant.png');
+          for (const key in plantImages) {
+            if (nameLower.includes(key)) {
+              plantImage = plantImages[key];
+              break;
+            }
+          }
           return (
             <View style={styles.plantItem}>
             <Image source={plantImage} style={styles.plantImage} />
             <View>
                 <Text style={styles.plantName}>{item.name}</Text>
-                <Text style={styles.plantText}>Rok výsadby: {item.year}</Text>
+                <Text style={styles.plantText}><Ionicons name="calendar-sharp"></Ionicons> {item.year}</Text>
                 <Text style={styles.plantText}>Počet semen: {item.count}</Text>
             </View>
             <View>
