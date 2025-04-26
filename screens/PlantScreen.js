@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, StyleSheet, Image, TextInput, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Modal, StyleSheet, Image, TextInput, FlatList, Dimensions, Alert } from 'react-native';
 import { insertPlant, getAllPlants, getAllSeeds, deletePlant } from '../database'; 
 import { Picker } from '@react-native-picker/picker'; 
 import { useNavigation } from '@react-navigation/native';
@@ -31,11 +31,29 @@ const PlantsScreen = () => {
   }, []);
 
 
-  const handleDeletePlant = async (id) => {
-    await deletePlant(id);
-    const allPlants = await getAllPlants();
-    setPlants(allPlants);
+  const handleDeletePlant = (id) => {
+    Alert.alert(
+      "Potvrzení smazání",
+      "Jste si jisti, že chcete smazat tuto rostlinu?",
+      [
+        {
+          text: "Zrušit",
+          style: "cancel",
+        },
+        {
+          text: "Smazat",
+          onPress: async () => {
+            await deletePlant(id);
+            const allPlants = await getAllPlants();
+            setPlants(allPlants);
+            Alert.alert('Úspěch', 'Rostlina byla smazána!');
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
+  
 
   useEffect(() => {
     const loadSeedsAndPlants = async () => {

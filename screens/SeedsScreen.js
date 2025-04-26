@@ -76,9 +76,26 @@ export const SeedsScreen = () => {
     setSeeds(data);
   };
 
-  const handleDelete = async (id) => {
-    await deleteSeed(id);
-    loadSeeds();
+  const handleDelete = (id) => {
+    Alert.alert(
+      "Potvrzení smazání",       
+      "Jste si jisti, že chcete smazat toto semínko?",  
+      [
+        {
+          text: "Zrušit",           
+          style: "cancel",
+        },
+        {
+          text: "Smazat",           
+          onPress: async () => {     
+            await deleteSeed(id);    
+            loadSeeds();             
+            Alert.alert('Úspěch', 'Semínko bylo smazáno!');
+          },
+        },
+      ],
+      { cancelable: false }           
+    );
   };
 
   useEffect(() => {
@@ -122,9 +139,9 @@ export const SeedsScreen = () => {
         {seeds.map((seed) => (
           <View key={seed.id} style={styles.seedItem}>
             {seed.photo && <Image source={{ uri: seed.photo }} style={styles.seedImage} />}
+            <Text style={styles.GTextH}>{seed.name}</Text>
             <View style={styles.row}>
               <View style={styles.textContainer}>
-                <Text>{seed.name}</Text>
                 <Text><Ionicons name="calendar-sharp" /> {seed.purchase_date}</Text>
                 <Text><Ionicons name="location-sharp" /> {seed.purchase_place}</Text>
                 <Text>{seed.price} Kč</Text>
@@ -177,6 +194,7 @@ const styles = StyleSheet.create({
   },
   seedItem: {
     width: width/2 - 30,
+    height: height/2.2,
     backgroundColor: '#e9edc9',
     margin: 10,
     padding: 15,

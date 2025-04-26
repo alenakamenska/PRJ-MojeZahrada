@@ -97,9 +97,32 @@ export const FieldsScreen = () => {
   };
 
   const handleDelete = async (id) => {
-    await deleteField(id);
-    loadFields();
+    Alert.alert(
+      "Potvrzení smazání",       
+      "Jste si jisti, že chcete smazat tento záhon?",  
+      [
+        {
+          text: "Zrušit",           
+          style: "cancel",
+        },
+        {
+          text: "Smazat",           
+          onPress: async () => {     
+            try {
+              await deleteField(id); 
+              loadFields();  
+              Alert.alert('Úspěch', 'Záhon byl smazaný!');  
+            } catch (error) {
+              console.error("Chyba při mazání záhonu:", error);
+              Alert.alert("Chyba", "Nepodařilo se smazat záhon.");
+            }
+          },
+        },
+      ],
+      { cancelable: false }  
+    );
   };
+  
 
   return (
     <View style={styles.container}>

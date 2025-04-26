@@ -51,9 +51,32 @@ export const GardenScreen = () => {
   };
 
   const handleDelete = async (id) => {
-    await deleteGreenhouse(id);
-    loadGreenhouses();
+    Alert.alert(
+      "Potvrzení smazání",       
+      "Jste si jisti, že chcete smazat tento skleník?", 
+      [
+        {
+          text: "Zrušit",           
+          style: "cancel",
+        },
+        {
+          text: "Smazat",           
+          onPress: async () => {     
+            try {
+              await deleteGreenhouse(id);  
+              loadGreenhouses(); 
+              Alert.alert('Úspěch', 'Skleník byl smazán!');  
+            } catch (error) {
+              console.error("Chyba při mazání skleníku:", error);
+              Alert.alert("Chyba", "Nepodařilo se smazat skleník.");
+            }
+          },
+        },
+      ],
+      { cancelable: false } 
+    );
   };
+  
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
